@@ -1,0 +1,7 @@
+﻿  Graphics.cpp
+D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Graphics.cpp(5,10): fatal error C1083: Cannot open include file: 'GL/glew.h': No such file or directory
+  Shapes.cpp
+D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\shapes.h(7,10): fatal error C1083: Cannot open include file: 'GL/glew.h': No such file or directory
+  Source.cpp
+D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(19,10): fatal error C1083: Cannot open include file: 'GL/glew.h': No such file or directory
+  Generating Code...
