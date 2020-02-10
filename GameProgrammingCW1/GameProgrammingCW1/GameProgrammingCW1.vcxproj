@@ -154,11 +154,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Directions.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="Shapes.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Directions.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="Shapes.h" />
   </ItemGroup>

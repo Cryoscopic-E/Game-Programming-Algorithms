@@ -24,6 +24,7 @@ using namespace std;
 #include <glm/gtx/transform.hpp>
 #include "graphics.h"
 #include "shapes.h"
+#include "directions.h"
 
 // MAIN FUNCTIONS
 void startup();
@@ -38,6 +39,10 @@ void onMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 void onMouseMoveCallback(GLFWwindow* window, double x, double y);
 void onMouseWheelCallback(GLFWwindow* window, double xoffset, double yoffset);
 
+//MADE FUNCTIONS
+void UpdatePlayerInput();
+bool CheckCollision(Shapes& obj1, Shapes& obj2);
+
 // VARIABLES
 bool        quit = false;
 float       deltaTime = 0.0f;    // Keep track of time per frame.
@@ -45,18 +50,29 @@ float       lastTime = 0.0f;    // variable to keep overall time.
 bool        keyStatus[1024];    // Hold key status.
 bool		mouseEnabled = true; // keep track of mouse toggle.
 
+//Grid Elements
+vector<Cube> gameGrid;
+int			gridSize = 10;
+
+//Boids 
+vector<Sphere> boidList;
+int			amountOfBoids = 20;
+glm::vec3 GetBoidsCenter();
+void BoidRule1();
+void BoidRule2();
+void BoidRule3();
+
+//CameraLock
+bool		lockCamera = true;
+
 // MAIN GRAPHICS OBJECT
 Graphics    myGraphics;        // Runing all the graphics in this object
 
 // DEMO OBJECTS
-Cube        myCube;
-Sphere      mySphere;
-Arrow       arrowX;
-Arrow       arrowY;
-Arrow       arrowZ;
+Cube        player;
 Cube        myFloor;
-Line        myLine;
-Cylinder    myCylinder;
+Arrow       arrowZ;
+
 
 // Some global variable to do the animation.
 float t = 0.001f;            // Global variable for animation
@@ -76,6 +92,9 @@ int main()
 
 		// Update the camera transform based on interactive inputs or by following a predifined path.
 		updateCamera();
+		
+		// Update player inputs
+		UpdatePlayerInput();
 
 		// Update position, orientations and any other relevant visual state of any dynamic elements in the scene.
 		updateSceneElements();
@@ -116,28 +135,61 @@ void startup() {
 	myGraphics.proj_matrix = glm::perspective(glm::radians(50.0f), myGraphics.aspect, 0.1f, 1000.0f);
 
 	// Load Geometry examples
-	myCube.Load();
+	player.Load();
+	player.position = glm::vec3(5.0f, 0.5f, 5.0f);
+	player.fillColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
 
-	mySphere.Load();
-	mySphere.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);    // You can change the shape fill colour, line colour or linewidth
-
-	arrowX.Load(); arrowY.Load(); arrowZ.Load();
-	arrowX.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f); arrowX.lineColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-	arrowY.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); arrowY.lineColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-	arrowZ.fillColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); arrowZ.lineColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+	arrowZ.Load();
+	arrowZ.fillColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); 
+	arrowZ.lineColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
 
 	myFloor.Load();
+	myFloor.position = glm::vec3(0.0f, 0.0f, 0.0f);
+	myFloor.scale = glm::vec3(1000.0f, 0.001f, 1000.0f);
 	myFloor.fillColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand Colour
 	myFloor.lineColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand again
 
-	myCylinder.Load();
-	myCylinder.fillColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
-	myCylinder.lineColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	for (int i = 0; i < amountOfBoids; i++) 
+	{
+		Sphere tempBoid;
+		tempBoid.debugSpeed = 2;
+		tempBoid.Load();
+		tempBoid.position = glm::vec3(rand() % 20 + 1, 1.0f, rand() % 20 + 1);
+		tempBoid.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); 
 
-	myLine.Load();
-	myLine.fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	myLine.lineColor = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
-	myLine.lineWidth = 5.0f;
+		boidList.push_back(tempBoid);
+	}
+
+	for (int i = 0; i < gridSize; i++) 
+	{
+		Cube tempCube;
+		tempCube.Load();
+		tempCube.position = glm::vec3(i, 0.5f, 0.0f);
+		gameGrid.push_back(tempCube);
+
+		if (i == 0 || i == gridSize - 1)
+		{
+			for (int j = 0; j < gridSize; j++)
+			{
+				Cube tempCube;
+				tempCube.Load();
+				tempCube.position = glm::vec3(i, 0.5f, j);
+				gameGrid.push_back(tempCube);
+				
+				if (i == 0 && j == gridSize - 1) 
+				{
+					for (int k = 0; k < gridSize; k++) 
+					{
+						Cube tempCube;
+						tempCube.Load();
+						tempCube.position = glm::vec3(k, 0.5f, j);
+						gameGrid.push_back(tempCube);
+					}
+				}
+			}
+		}
+
+	}
 
 	// Optimised Graphics
 	myGraphics.SetOptimisations();        // Cull and depth testing
@@ -185,8 +237,55 @@ void updateCamera() {
 			myGraphics.cameraPosition + myGraphics.cameraFront,					// centre
 			myGraphics.cameraUp);												// up
 	}
-}
 
+	//TODO:: CHANGE HARDCODED CAMERA
+	if (lockCamera) {
+		myGraphics.cameraPitch = -90;
+		myGraphics.cameraYaw = 90;
+		myGraphics.cameraPosition = glm::vec3(4, 14, 4);
+	}
+
+}
+void UpdatePlayerInput() 
+{
+	if (keyStatus[GLFW_KEY_UP])
+	{
+		player.velocity.x = 0.0f;
+		if (player.velocity.z < 0) player.velocity.z = 0.0f;
+		player.acceleration.z = 0.1f;
+	}
+	else if (keyStatus[GLFW_KEY_DOWN]) {
+		player.velocity.x = 0.0f;
+		if (player.velocity.z > 0) player.velocity.z = 0.0f;
+		player.acceleration.z = -0.1f;
+	}
+	else if (keyStatus[GLFW_KEY_RIGHT]) {
+		player.velocity.z = 0.0f;
+		if (player.velocity.x > 0) player.velocity.x = 0.0f;
+		player.acceleration.x = -0.1f;
+	}
+	else if (keyStatus[GLFW_KEY_LEFT]) {
+		player.velocity.z = 0.0f;
+		if (player.velocity.x < 0) player.velocity.x = 0.0f;
+		player.acceleration.x = 0.1f;
+	}
+	else {
+		player.velocity = glm::vec3(0.0f, 0.0f, 0.0f);
+		player.acceleration.x = 0.0f;
+		player.acceleration.z = 0.0f;
+	}
+
+	if (keyStatus[GLFW_KEY_C]) 
+	{
+		if (lockCamera) {
+			lockCamera = false;
+		}
+		else {
+			lockCamera = true;
+		}
+	}
+	
+}
 void updateSceneElements() {
 
 	glfwPollEvents();                                // poll callbacks
@@ -197,67 +296,28 @@ void updateSceneElements() {
 	lastTime = currentTime;                            // Save for next frame calculations.
 
 	// Do not forget your ( T * R * S ) http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
+	
+	for (int i = 0; i < gameGrid.size(); i++)
+	{
+		gameGrid[i].Update(myGraphics, deltaTime);
+	}
 
-	// Calculate Cube position
-	glm::mat4 mv_matrix_cube =
-		glm::translate(glm::vec3(2.0f, 0.5f, 0.0f)) *
-		glm::mat4(1.0f);
-	myCube.mv_matrix = myGraphics.viewMatrix * mv_matrix_cube;
-	myCube.proj_matrix = myGraphics.proj_matrix;
+	BoidRule1();
+	BoidRule2();
+	BoidRule3();
 
-	// calculate Sphere movement
-	glm::mat4 mv_matrix_sphere =
-		glm::translate(glm::vec3(-2.0f, 0.5f, 0.0f)) *
-		glm::rotate(-t, glm::vec3(0.0f, 1.0f, 0.0f)) *
-		glm::rotate(-t, glm::vec3(1.0f, 0.0f, 0.0f)) *
-		glm::mat4(1.0f);
-	mySphere.mv_matrix = myGraphics.viewMatrix * mv_matrix_sphere;
-	mySphere.proj_matrix = myGraphics.proj_matrix;
+	for (int i = 0; i < boidList.size(); i++)
+	{
+		boidList[i].Update(myGraphics, deltaTime);
+	}
 
-	//Calculate Arrows translations (note: arrow model points up)
-	glm::mat4 mv_matrix_x =
-		glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)) *
-		glm::rotate(glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) *
-		glm::scale(glm::vec3(0.2f, 0.5f, 0.2f)) *
-		glm::mat4(1.0f);
-	arrowX.mv_matrix = myGraphics.viewMatrix * mv_matrix_x;
-	arrowX.proj_matrix = myGraphics.proj_matrix;
+	player.Update(myGraphics, deltaTime);
+	myFloor.Update(myGraphics, deltaTime);
+	arrowZ.Update(myGraphics, deltaTime);
 
-	glm::mat4 mv_matrix_y =
-		glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)) *
-		//glm::rotate(glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) *    // already model pointing up
-		glm::scale(glm::vec3(0.2f, 0.5f, 0.2f)) *
-		glm::mat4(1.0f);
-	arrowY.mv_matrix = myGraphics.viewMatrix * mv_matrix_y;
-	arrowY.proj_matrix = myGraphics.proj_matrix;
-
-	glm::mat4 mv_matrix_z =
-		glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)) *
-		glm::rotate(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) *
-		glm::scale(glm::vec3(0.2f, 0.5f, 0.2f)) *
-		glm::mat4(1.0f);
-	arrowZ.mv_matrix = myGraphics.viewMatrix * mv_matrix_z;
-	arrowZ.proj_matrix = myGraphics.proj_matrix;
-
-	// Calculate floor position and resize
-	myFloor.mv_matrix = myGraphics.viewMatrix *
-		glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)) *
-		glm::scale(glm::vec3(1000.0f, 0.001f, 1000.0f)) *
-		glm::mat4(1.0f);
-	myFloor.proj_matrix = myGraphics.proj_matrix;
-
-	// Calculate cylinder
-	myCylinder.mv_matrix = myGraphics.viewMatrix *
-		glm::translate(glm::vec3(-1.0f, 0.5f, 2.0f)) *
-		glm::mat4(1.0f);
-	myCylinder.proj_matrix = myGraphics.proj_matrix;
-
-	// Calculate Line
-	myLine.mv_matrix = myGraphics.viewMatrix *
-		glm::translate(glm::vec3(1.0f, 0.5f, 2.0f)) *
-		glm::mat4(1.0f);
-	myLine.proj_matrix = myGraphics.proj_matrix;
-
+	for (int i = 0; i < gameGrid.size(); i++) {
+		CheckCollision(player, gameGrid[i]);
+	}
 
 	t += 0.01f; // increment movement variable
 
@@ -266,23 +326,126 @@ void updateSceneElements() {
 
 }
 
+bool CheckCollision(Shapes& obj1, Shapes& obj2)
+{
+	if (obj1.left < obj2.right && obj1.right > obj2.left && obj1.up > obj2.down && obj1.down <obj2.up)
+	{
+		obj1.isColliding = true;
+		if (obj1.direction == Directions::Direction::Left && obj2.direction == Directions::Direction::Idle)
+		{
+			obj1.addedForce = glm::vec3(-5, 0, 0);
+			printf("COLLIDING LEFT\n");
+
+		}
+		else if (obj1.direction == Directions::Direction::Right && obj2.direction == Directions::Direction::Idle) 
+		{
+			obj1.addedForce = glm::vec3(5, 0, 0);
+			printf("COLLIDING RIGHT\n");
+
+		}else if (obj1.direction == Directions::Direction::Up && obj2.direction == Directions::Direction::Idle)
+		{
+			obj1.addedForce = glm::vec3(0, 0, -5);
+			printf("COLLIDING UP\n");
+		}
+		else if (obj1.direction == Directions::Direction::Down && obj2.direction == Directions::Direction::Idle)
+		{
+			obj1.addedForce = glm::vec3(0, 0, 5);
+			printf("COLLIDING DOWN \n");
+		}
+		//obj1.Update(myGraphics, deltaTime);
+		//printf("COLLIDING BOYYY");
+		return true;
+	}
+	obj1.isColliding = false;
+	return false;
+}
+
 void renderScene() {
 	// Clear viewport - start a new frame.
 	myGraphics.ClearViewport();
 
 	// Draw objects in screen
+	for (int i = 0; i < boidList.size(); i++)
+	{
+		boidList[i].Draw();
+	}
+
+	for (int i = 0; i < gameGrid.size(); i++)
+	{
+		gameGrid[i].Draw();
+	}
 	myFloor.Draw();
-	myCube.Draw();
-	mySphere.Draw();
+	player.Draw();
+	//arrowZ.Draw();
 
-	arrowX.Draw();
-	arrowY.Draw();
-	arrowZ.Draw();
-
-	myLine.Draw();
-	myCylinder.Draw();
 }
 
+glm::vec3 GetBoidsCenter() 
+{
+	glm::vec3 temp = glm::vec3(0,0,0);
+	for (int i = 0; i < boidList.size(); i++) 
+	{
+		temp += boidList[i].position;
+	}
+
+	glm::vec3 temp2 = glm::vec3(temp.x / boidList.size(), temp.y / boidList.size(), temp.z / boidList.size());
+	return temp2;
+}
+
+void BoidRule1()
+{
+	for (int i = 0; i < boidList.size(); i++)
+	{
+		boidList[i].velocity = player.position - boidList[i].position;
+	}
+
+}
+
+void BoidRule2() 
+{
+	for (int i = 0; i < boidList.size(); i++) 
+	{
+		for (int j = 0; j < boidList.size(); j++) 
+		{
+			if (i != j)
+			{
+				if (glm::distance(boidList[i].position, boidList[j].position) < 1)
+				{
+					printf("POS1 %f %f POS2 %f %f \n", boidList[i].position.x, boidList[i].position.z, boidList[j].position.x, boidList[j].position.z);
+					boidList[i].velocity = boidList[i].position - boidList[j].position;
+				}
+			}
+		}
+
+		for (int j = 0; j < gameGrid.size(); j++) 
+		{
+			if (glm::distance(boidList[i].position, gameGrid[j].position) < 4)
+			{
+				boidList[i].velocity = boidList[i].position - gameGrid[j].position;
+			}
+		}
+
+		if (glm::distance(boidList[i].position, myFloor.position) < 5)
+		{
+			boidList[i].velocity = boidList[i].position - myFloor.position;
+		}
+	}
+}
+
+void BoidRule3() 
+{
+	glm::vec3 tempVel = glm::vec3(0, 0, 0);
+	for (int i = 0; i < boidList.size(); i++) 
+	{
+		for (int j = 0; j < boidList.size(); j++)
+		{
+			tempVel += boidList[j].velocity;
+		}
+
+		tempVel = glm::vec3(tempVel.x / boidList.size(), tempVel.y / boidList.size(), tempVel.z / boidList.size());
+		boidList[i].velocity = tempVel / glm::vec3(8,8,8);
+	}	
+}
 
 // CallBack functions low level functionality.
 void onResizeCallback(GLFWwindow* window, int w, int h) {    // call everytime the window is resized

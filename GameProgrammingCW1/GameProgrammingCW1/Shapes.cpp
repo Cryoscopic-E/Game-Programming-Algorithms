@@ -5,8 +5,14 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+
 
 Shapes::Shapes() {
+	position = glm::vec3(0.0f, 0.5f, 0.0f);
+	rotation = glm::vec3(0.0f, 1.0f, 0.0f);
+	scale = glm::vec3(1.0f, 1.0f, 1.0f);
+	CalculateSides();
 
 };
 
@@ -176,6 +182,75 @@ void Shapes::checkErrorShader(GLuint shader) {
 	}
 }
 
+void Shapes::Update(Graphics graphics, float time)
+{
+	CalculateSides();
+	CalculatePhysics(time);
+	glm::mat4 mv_matrix_temp =
+		glm::translate(position) *
+		glm::rotate(0.0f, rotation) *
+		glm::scale(scale) *
+		glm::mat4(1.0f);
+	mv_matrix = graphics.viewMatrix * mv_matrix_temp;
+	proj_matrix = graphics.proj_matrix;
+	CalculateDirection();
+}
+void Shapes::CalculateSides() 
+{
+	left = position.x - (scale.x / 2);
+	right = position.x + (scale.x / 2);
+	down = position.z - (scale.z / 2);
+	up = position.z + (scale.z / 2);
+}
+void Shapes::CalculatePhysics(float deltaTime) 
+{
+	velocity += acceleration;
+
+	if (velocity.x > topSpeed) {
+		velocity.x = topSpeed;
+	}
+	else if (velocity.x < -topSpeed) {
+		velocity.x = -topSpeed; 
+	}
+
+	if (velocity.z > topSpeed) {
+		velocity.z = topSpeed;
+	}
+	else if (velocity.z < -topSpeed) {
+		velocity.z = -topSpeed;
+	}
+	
+	position += (velocity + addedForce) * deltaTime * debugSpeed;
+}
+
+void Shapes::CalculateDirection()
+{
+	if (isColliding)
+		return;
+
+	addedForce = glm::vec3(0, 0, 0);
+	if (velocity.x > 0) {
+		direction = Directions::Direction::Left;
+		//printf(" LEFT \n");
+
+	}
+	else if (velocity.x < 0) {
+		direction = Directions::Direction::Right;
+		//printf(" RIGHT \n");
+
+	}
+	else if (velocity.z > 0) {
+		direction = Directions::Direction::Up;
+		//printf(" UP \n");
+
+	}
+	else if (velocity.z < 0) {
+		direction = Directions::Direction::Down;
+		//printf(" DOWN \n");
+
+	}
+
+}
 Cube::Cube() {
 	// Exported from Blender a cube by default (OBJ File)
 	rawData = R"(
