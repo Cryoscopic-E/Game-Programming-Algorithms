@@ -56,7 +56,7 @@ int			gridSize = 10;
 
 //Boids 
 vector<Sphere> boidList;
-int			amountOfBoids = 20;
+int			amountOfBoids = 30;
 glm::vec3 GetBoidsCenter();
 void BoidRule1();
 void BoidRule2();
@@ -152,9 +152,11 @@ void startup() {
 	for (int i = 0; i < amountOfBoids; i++) 
 	{
 		Sphere tempBoid;
-		tempBoid.debugSpeed = 2;
+		tempBoid.debugSpeed = 1;
 		tempBoid.Load();
-		tempBoid.position = glm::vec3(rand() % 20 + 1, 1.0f, rand() % 20 + 1);
+		tempBoid.isBoid = true;
+		tempBoid.topSpeed = 0.2f;
+		tempBoid.position = glm::vec3(rand() % 10 + 1, 1.0f, rand() % 10 + 1);
 		tempBoid.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); 
 
 		boidList.push_back(tempBoid);
@@ -308,7 +310,10 @@ void updateSceneElements() {
 
 	for (int i = 0; i < boidList.size(); i++)
 	{
+		boidList[i].velocity += boidList[i].boidVelocity;
 		boidList[i].Update(myGraphics, deltaTime);
+		printf("VELOCITY %f %f %f \n", boidList[i].velocity.x, boidList[i].velocity.y, boidList[i].velocity.z);
+		boidList[i].boidVelocity = glm::vec3(0,0,0);
 	}
 
 	player.Update(myGraphics, deltaTime);
@@ -317,6 +322,18 @@ void updateSceneElements() {
 
 	for (int i = 0; i < gameGrid.size(); i++) {
 		CheckCollision(player, gameGrid[i]);
+	}
+
+	for (int i = 0; i < boidList.size(); i++) {
+		for (int j = 0; j < gameGrid.size(); j++) {
+			CheckCollision(boidList[i], gameGrid[i]);
+		}
+		//for (int j = 0; j < boidList.size(); j++)
+		//{
+		//	//if (i != j)
+		//		//CheckCollision(boidList[i], boidList[j]);			
+		//}
+
 	}
 
 	t += 0.01f; // increment movement variable
@@ -330,6 +347,24 @@ bool CheckCollision(Shapes& obj1, Shapes& obj2)
 {
 	if (obj1.left < obj2.right && obj1.right > obj2.left && obj1.up > obj2.down && obj1.down <obj2.up)
 	{
+		obj1.isColliding = true;
+		if (obj1.isBoid && obj2.isBoid) 
+		{
+			obj2.isColliding = true;
+			obj1.addedForce = (obj1.velocity * glm::vec3(1.5f, 1.5f, 1.5f));// *glm::vec3(-1, -1, -1);
+			obj2.addedForce = (obj1.velocity * glm::vec3(-1, -1, -1));
+			if (obj1.position.y < 1) 
+			{
+				obj1.addedForce.y = 10;
+			}
+			return true;
+		}
+		else if(obj1.isBoid && !obj2.isBoid)
+		{
+			obj1.addedForce = (obj1.velocity * glm::vec3(1.5f, 1.5f, 1.5f));// *glm::vec3(-1, -1, -1);
+			return true;
+		}
+
 		obj1.isColliding = true;
 		if (obj1.direction == Directions::Direction::Left && obj2.direction == Directions::Direction::Idle)
 		{
@@ -357,6 +392,7 @@ bool CheckCollision(Shapes& obj1, Shapes& obj2)
 		return true;
 	}
 	obj1.isColliding = false;
+	obj2.isColliding = false;
 	return false;
 }
 
@@ -369,7 +405,7 @@ void renderScene() {
 	{
 		boidList[i].Draw();
 	}
-
+	
 	for (int i = 0; i < gameGrid.size(); i++)
 	{
 		gameGrid[i].Draw();
@@ -396,7 +432,8 @@ void BoidRule1()
 {
 	for (int i = 0; i < boidList.size(); i++)
 	{
-		boidList[i].velocity = player.position - boidList[i].position;
+		boidList[i].boidVelocity += (GetBoidsCenter() - boidList[i].position) / glm::vec3(100,100,100);
+		boidList[i].boidVelocity += (player.position - boidList[i].position) / glm::vec3(8,8,8);
 	}
 
 }
@@ -405,30 +442,31 @@ void BoidRule2()
 {
 	for (int i = 0; i < boidList.size(); i++) 
 	{
+		if (boidList[i].position.y <1) 
+		{
+			boidList[i].boidVelocity += 1;
+		}
+
 		for (int j = 0; j < boidList.size(); j++) 
 		{
 			if (i != j)
 			{
 				if (glm::distance(boidList[i].position, boidList[j].position) < 1)
 				{
-					printf("POS1 %f %f POS2 %f %f \n", boidList[i].position.x, boidList[i].position.z, boidList[j].position.x, boidList[j].position.z);
-					boidList[i].velocity = boidList[i].position - boidList[j].position;
+					//printf("POS1 %f %f POS2 %f %f \n", boidList[i].position.x, boidList[i].position.z, boidList[j].position.x, boidList[j].position.z);
+					boidList[i].boidVelocity += boidList[i].position - boidList[j].position;
 				}
 			}
 		}
-
+		
 		for (int j = 0; j < gameGrid.size(); j++) 
 		{
-			if (glm::distance(boidList[i].position, gameGrid[j].position) < 4)
+			if (glm::distance(boidList[i].position, gameGrid[j].position) < 1.2f)
 			{
-				boidList[i].velocity = boidList[i].position - gameGrid[j].position;
+				boidList[i].boidVelocity += boidList[i].position - gameGrid[j].position;
 			}
 		}
-
-		if (glm::distance(boidList[i].position, myFloor.position) < 5)
-		{
-			boidList[i].velocity = boidList[i].position - myFloor.position;
-		}
+		
 	}
 }
 
@@ -443,7 +481,7 @@ void BoidRule3()
 		}
 
 		tempVel = glm::vec3(tempVel.x / boidList.size(), tempVel.y / boidList.size(), tempVel.z / boidList.size());
-		boidList[i].velocity = tempVel / glm::vec3(8,8,8);
+		boidList[i].boidVelocity += tempVel / glm::vec3(8,8,8);
 	}	
 }
 

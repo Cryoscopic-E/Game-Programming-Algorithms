@@ -164,6 +164,23 @@ void Shapes::Draw() {
 	glDrawArrays(GL_TRIANGLES, 0, vertexPositions.size() / 3);
 }
 
+void Shapes::DrawInstanced(int numBoids) 
+{
+	glUseProgram(program);
+	glBindVertexArray(vao);
+	glEnableVertexAttribArray(0);
+
+	glUniformMatrix4fv(proj_location, 1, GL_FALSE, &proj_matrix[0][0]);
+	glUniformMatrix4fv(mv_location, 1, GL_FALSE, &mv_matrix[0][0]);
+
+	glUniform4f(color_location, fillColor.r, fillColor.g, fillColor.b, fillColor.a);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, vertexPositions.size() / 3, numBoids);
+
+	glUniform4f(color_location, lineColor.r, lineColor.g, lineColor.b, lineColor.a);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  glLineWidth(lineWidth);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, vertexPositions.size() / 3, numBoids);
+}
 
 void Shapes::checkErrorShader(GLuint shader) {
 	// Get log length
@@ -213,6 +230,13 @@ void Shapes::CalculatePhysics(float deltaTime)
 		velocity.x = -topSpeed; 
 	}
 
+	if (velocity.y > topSpeed) {
+		velocity.y = topSpeed;
+	}
+	else if (velocity.y < -topSpeed) {
+		velocity.y = -topSpeed;
+	}
+
 	if (velocity.z > topSpeed) {
 		velocity.z = topSpeed;
 	}
@@ -220,7 +244,7 @@ void Shapes::CalculatePhysics(float deltaTime)
 		velocity.z = -topSpeed;
 	}
 	
-	position += (velocity + addedForce) * deltaTime * debugSpeed;
+	position += (velocity + addedForce) * deltaTime;// *debugSpeed;
 }
 
 void Shapes::CalculateDirection()
@@ -231,22 +255,22 @@ void Shapes::CalculateDirection()
 	addedForce = glm::vec3(0, 0, 0);
 	if (velocity.x > 0) {
 		direction = Directions::Direction::Left;
-		//printf(" LEFT \n");
+		if(!isBoid)printf(" LEFT \n");
 
 	}
 	else if (velocity.x < 0) {
 		direction = Directions::Direction::Right;
-		//printf(" RIGHT \n");
+		if (!isBoid)printf(" RIGHT \n");
 
 	}
 	else if (velocity.z > 0) {
-		direction = Directions::Direction::Up;
-		//printf(" UP \n");
+		if(!isBoid)direction = Directions::Direction::Up;
+		if (!isBoid)printf(" UP \n");
 
 	}
 	else if (velocity.z < 0) {
 		direction = Directions::Direction::Down;
-		//printf(" DOWN \n");
+		if (!isBoid)printf(" DOWN \n");
 
 	}
 
@@ -1089,5 +1113,136 @@ f 6/9/4 2/14/4 1/10/4
 }
 
 Line::~Line() {
+
+}
+
+Boid::Boid() 
+{
+	rawData = R"(
+o Cone
+v 0.000000 0.800000 -0.100000
+v 0.070711 0.800000 -0.070711
+v 0.100000 0.800000 -0.000000
+v 0.000000 1.000000 0.000000
+v 0.070711 0.800000 0.070711
+v -0.000000 0.800000 0.100000
+v -0.070711 0.800000 0.070711
+v -0.100000 0.800000 -0.000000
+v -0.070711 0.800000 -0.070711
+s off
+f 4 7 6
+f 5 7 2
+f 4 8 7
+f 3 4 5
+f 5 4 6
+f 4 9 8
+f 4 1 9
+f 2 1 4
+f 2 4 3
+f 9 1 2
+f 2 3 5
+f 5 6 7
+f 7 8 9
+f 9 2 7
+o Cylinder
+v 0.000000 0.000000 -0.050000
+v 0.009755 0.900000 -0.049039
+v 0.019134 0.000000 -0.046194
+v 0.027779 0.900000 -0.041573
+v 0.035355 0.000000 -0.035355
+v 0.041573 0.900000 -0.027779
+v 0.046194 0.000000 -0.019134
+v 0.049039 0.900000 -0.009755
+v 0.050000 0.000000 -0.000000
+v 0.049039 0.900000 0.009755
+v 0.046194 0.000000 0.019134
+v 0.041573 0.900000 0.027779
+v 0.035355 0.000000 0.035355
+v 0.027779 0.900000 0.041573
+v 0.019134 0.000000 0.046194
+v 0.009755 0.900000 0.049039
+v -0.000000 0.000000 0.050000
+v -0.009755 0.900000 0.049039
+v -0.019134 0.000000 0.046194
+v -0.027779 0.900000 0.041573
+v -0.035355 0.000000 0.035355
+v -0.041574 0.900000 0.027778
+v -0.046194 0.000000 0.019134
+v -0.049039 0.900000 0.009754
+v -0.050000 0.000000 -0.000000
+v -0.049039 0.900000 -0.009755
+v -0.046194 0.000000 -0.019134
+v -0.041573 0.900000 -0.027779
+v -0.035355 0.000000 -0.035355
+v -0.027778 0.900000 -0.041574
+v -0.019134 0.000000 -0.046194
+v -0.009754 0.900000 -0.049039
+s off
+f 13 15 14
+f 16 14 15
+f 17 19 18
+f 18 16 17
+f 19 21 20
+f 20 18 19
+f 21 23 22
+f 22 20 21
+f 23 25 24
+f 24 22 23
+f 25 27 26
+f 26 24 25
+f 27 29 28
+f 28 26 27
+f 29 31 30
+f 30 28 29
+f 31 33 32
+f 32 30 31
+f 33 35 34
+f 34 32 33
+f 35 37 36
+f 36 34 35
+f 37 39 38
+f 38 36 37
+f 41 40 39
+f 40 38 39
+f 41 10 40
+f 29 21 37
+f 11 12 10
+f 24 32 16
+f 15 17 16
+f 11 13 12
+f 14 12 13
+f 10 41 11
+f 13 11 41
+f 41 39 37
+f 37 35 33
+f 33 31 29
+f 29 27 25
+f 25 23 29
+f 21 19 17
+f 17 15 13
+f 13 41 37
+f 37 33 29
+f 29 23 21
+f 21 17 13
+f 13 37 21
+f 40 10 12
+f 12 14 16
+f 16 18 20
+f 20 22 24
+f 24 26 28
+f 28 30 32
+f 32 34 36
+f 36 38 40
+f 40 12 16
+f 16 20 24
+f 24 28 32
+f 32 36 40
+f 40 16 32
+)";
+
+	LoadObj();
+}
+
+Boid::~Boid() {
 
 }

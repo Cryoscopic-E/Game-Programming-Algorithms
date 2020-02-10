@@ -25,6 +25,7 @@ public:
 	void CalculatePhysics(float deltatime);
 	void CalculateDirection();
 	void CalculateSides();
+	void DrawInstanced(int numBoids);
 
 	vector<GLfloat> vertexPositions;
 
@@ -61,6 +62,10 @@ public:
 	float					debugSpeed = 1;
 	bool					isColliding = false;
 
+	//Boids
+	bool					isBoid;
+	glm::vec3				boidVelocity;
+
 protected:
 	string rawData;			// Import obj file from Blender (note: no textures or UVs).
 	void LoadObj();
@@ -94,4 +99,11 @@ class Line : public Shapes {
 public:
 	Line();
 	~Line();
+};
+
+class Boid : public Shapes
+{
+public:
+	Boid();
+	~Boid();
 };
