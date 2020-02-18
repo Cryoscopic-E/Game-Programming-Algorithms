@@ -17,9 +17,9 @@ Astar* Astar::getInstance()
 	return instance;
 }
 
-std::vector<glm::vec3> Astar::path(std::vector<std::vector<int>> & map, glm::vec3 start, glm::vec3 goal)
+std::stack<glm::vec3> Astar::path(std::vector<std::vector<int>> & map, glm::vec3 start, glm::vec3 goal)
 {
-	std::vector<glm::vec3> path;
+	std::stack<glm::vec3> path;
 
 	Point startPoint = vec3ToPoint(start);
 	Point goalPoint = vec3ToPoint(goal);
@@ -28,19 +28,19 @@ std::vector<glm::vec3> Astar::path(std::vector<std::vector<int>> & map, glm::vec
 	if (!isValidPoint(goalPoint))
 	{
 		std::cout << "invalid: goal point out of map bounds" << std::endl;
-		return std::vector<glm::vec3>();
+		return std::stack<glm::vec3>();
 	}
 	// goal point not blocked by wall
 	if (isWall(goalPoint, map))
 	{
 		std::cout << "invalid: goal point is wall" << std::endl;
-		return std::vector<glm::vec3>();
+		return std::stack<glm::vec3>();
 	}
 	// goal == start
 	if (isGoal(startPoint, goalPoint))
 	{
 		std::cout << "goal point already reached!" << std::endl;
-		return std::vector<glm::vec3>();
+		return std::stack<glm::vec3>();
 	}
 
 	std::priority_queue<Cell> fringe;
@@ -90,20 +90,19 @@ std::vector<glm::vec3> Astar::path(std::vector<std::vector<int>> & map, glm::vec
 	// RETURN EMPTY VECTOR IF NO PATH FOUND
 	if (!path_found)
 	{
-		return std::vector<glm::vec3>();
+		return std::stack<glm::vec3>();
 	}
 	// CONSTRUCT PATH WITH CLOSE SET REVERSE
-	path.push_back(pointToVec3(goalPoint));
+	path.push(pointToVec3(goalPoint));
 	Point lastparent;
 	for (int i = visited.size() - 1; i > 0; --i)
 	{
 		if (lastparent == Point(0, 0) || lastparent == visited[i].position)
 		{
-			path.push_back(pointToVec3(visited[i].position));
+			path.push(pointToVec3(visited[i].position));
 			lastparent = visited[i].parent;
 		}
 	}
-	std::reverse(path.begin(), path.end());
 	return path;
 }
 

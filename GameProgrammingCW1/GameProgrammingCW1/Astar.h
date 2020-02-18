@@ -6,6 +6,7 @@
 #include <vector>
 #include <queue>
 #include <set>
+#include <stack>
 
 struct Point
 {
@@ -101,7 +102,7 @@ class Astar
 {
 public:
 	static Astar* getInstance();
-	std::vector<glm::vec3> path(std::vector<std::vector<int>>& map, glm::vec3 start, glm::vec3 goal);
+	std::stack<glm::vec3> path(std::vector<std::vector<int>>& map, glm::vec3 start, glm::vec3 goal);
 	Point vec3ToPoint(glm::vec3 vector);
 	glm::vec3 pointToVec3(Point point);
 

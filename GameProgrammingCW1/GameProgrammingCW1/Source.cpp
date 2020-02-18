@@ -26,7 +26,7 @@ using namespace std;
 #include "graphics.h"
 #include "shapes.h"
 #include "Astar.h"
-
+#include <stack>
 // MAIN FUNCTIONS
 void startup();
 void updateCamera();
@@ -64,6 +64,7 @@ glm::vec3 floorPositions [WIDTH*HEIGHT];
 std::vector<glm::vec3> wallPositions;
 glm::vec3 goalArrowPosition;
 glm::vec3 aStarSpherePosition;
+std::stack<glm::vec3> aStarPath;
 
 std::vector<std::vector<int>> map =	{ 
 					{1,1,1,1,1,1,1,1,1,1,1,1},
@@ -233,6 +234,13 @@ void updateSceneElements() {
 	// Do not forget your ( T * R * S ) http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
 
 	// calculate Sphere movement
+
+	//if pathwas calculated
+	if (aStarPath.size() != 0)
+	{
+		
+	}
+
 	glm::mat4 mv_matrix_sphere =
 		glm::translate(aStarSpherePosition) *
 		glm::mat4(1.0f);
@@ -240,8 +248,6 @@ void updateSceneElements() {
 	mySphere.proj_matrix = myGraphics.proj_matrix;
 
 	//Calculate Arrow for Astar goal
-
-
 	glm::mat4 mv_matrix_arrow =
 		glm::translate(goalArrowPosition) *
 		glm::rotate(glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f))*
@@ -335,12 +341,13 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 
 		if (keyStatus[GLFW_KEY_ENTER])
 		{
-			Astar::getInstance()->setParams(WIDTH, HEIGHT, 8);
-			std::vector<glm::vec3> path = Astar::getInstance()->path(map,aStarSpherePosition, goalArrowPosition);
+			Astar::getInstance()->setParams(WIDTH, HEIGHT, 4);
+			aStarPath = Astar::getInstance()->path(map,aStarSpherePosition, goalArrowPosition);
 			std::cout << "printing path" << std::endl;
-			for (glm::vec3 vec : path)
+			while(!aStarPath.empty())
 			{
-				std::cout << glm::to_string(vec) << std::endl;
+				std::cout << glm::to_string(aStarPath.top()) << std::endl;
+				aStarPath.pop();
 			}
 		}
 	}
