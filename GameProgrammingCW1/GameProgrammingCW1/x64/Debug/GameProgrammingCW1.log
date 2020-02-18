@@ -1,1 +1,4 @@
-﻿
+﻿  Source.cpp
+D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(168,62): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(279,43): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+  GameProgrammingCW1.vcxproj -> D:\University\GameProgramming\GameProgrammingCW1\x64\Debug\GameProgrammingCW1.exe

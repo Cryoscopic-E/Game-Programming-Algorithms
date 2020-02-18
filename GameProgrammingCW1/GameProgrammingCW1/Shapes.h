@@ -15,7 +15,9 @@ public:
 	~Shapes();
 
 	void Load();
+	void LoadInstanced(glm::vec3* positions, const int numInstances);
 	void Draw();
+	void DrawInstanced(const int numInstances);
 	void  checkErrorShader(GLuint shader);
 
 	vector<GLfloat> vertexPositions;

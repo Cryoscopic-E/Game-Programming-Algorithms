@@ -141,6 +141,84 @@ void main(void){
 	glBindVertexArray(0);	// Unbind
 }
 
+void Shapes::LoadInstanced(glm::vec3* positions, const int numInstances)
+{
+	const char* vs_source[] = { R"(
+#version 330 core
+
+layout (location = 0) in vec4 position;
+layout (location = 1) in vec3 transl;
+uniform mat4 mv_matrix;
+uniform mat4 proj_matrix;
+
+void main(void){
+	gl_Position = proj_matrix * mv_matrix * (position + vec4(transl,0.0));
+}
+)" };
+
+
+	const char* fs_source[] = { R"(
+#version 330 core
+
+uniform vec4 inColor;
+out vec4 color;
+
+void main(void){
+	color = inColor;
+}
+)" };
+
+	program = glCreateProgram();
+	GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fs, 1, fs_source, NULL);
+	glCompileShader(fs);
+	checkErrorShader(fs);
+
+	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vs, 1, vs_source, NULL);
+	glCompileShader(vs);
+	checkErrorShader(vs);
+
+	glAttachShader(program, vs);
+	glAttachShader(program, fs);
+
+	glLinkProgram(program);
+
+	mv_location = glGetUniformLocation(program, "mv_matrix");
+	proj_location = glGetUniformLocation(program, "proj_matrix");
+	color_location = glGetUniformLocation(program, "inColor");
+
+
+	unsigned int instVBO;
+	glGenBuffers(1, &instVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, instVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * numInstances, &positions[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	glGenBuffers(1, &buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	glBufferData(GL_ARRAY_BUFFER, vertexPositions.size() * sizeof(GLfloat), &vertexPositions[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, instVBO);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glVertexAttribDivisor(1, 1);
+
+
+
+	glLinkProgram(0);	// unlink
+	glDisableVertexAttribArray(0); // Disable
+	glBindVertexArray(0);	// Unbind
+}
+
+
+
 void Shapes::Draw() {
 	glUseProgram(program);
 	glBindVertexArray(vao);
@@ -156,6 +234,24 @@ void Shapes::Draw() {
 	glUniform4f(color_location, lineColor.r, lineColor.g, lineColor.b, lineColor.a);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  glLineWidth(lineWidth);
 	glDrawArrays(GL_TRIANGLES, 0, vertexPositions.size() / 3);
+}
+
+void Shapes::DrawInstanced(const int numInstances)
+{
+	glUseProgram(program);
+	glBindVertexArray(vao);
+	glEnableVertexAttribArray(0);
+
+	glUniformMatrix4fv(proj_location, 1, GL_FALSE, &proj_matrix[0][0]);
+	glUniformMatrix4fv(mv_location, 1, GL_FALSE, &mv_matrix[0][0]);
+
+	glUniform4f(color_location, fillColor.r, fillColor.g, fillColor.b, fillColor.a);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, vertexPositions.size() / 3,numInstances);
+
+	glUniform4f(color_location, lineColor.r, lineColor.g, lineColor.b, lineColor.a);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  glLineWidth(lineWidth);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, vertexPositions.size() / 3,numInstances);
 }
 
 
