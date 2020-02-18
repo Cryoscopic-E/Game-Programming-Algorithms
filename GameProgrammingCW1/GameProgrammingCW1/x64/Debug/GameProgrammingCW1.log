@@ -1,14 +1,4 @@
-﻿  Astar.cpp
-D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Astar.cpp(98,33): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Astar.cpp(137,33): warning C4244: 'return': conversion from 'int' to 'float', possible loss of data
-D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Astar.cpp(142,43): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Astar.cpp(142,18): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Astar.cpp(149,36): warning C4244: 'return': conversion from 'int' to 'float', possible loss of data
-D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Astar.cpp(153,45): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Astar.cpp(153,19): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  Source.cpp
-D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(169,62): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
-D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(285,43): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
-  Generating Code...
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+﻿  Source.cpp
+D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(171,62): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(321,43): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
   GameProgrammingCW1.vcxproj -> D:\University\GameProgramming\GameProgrammingCW1\x64\Debug\GameProgrammingCW1.exe

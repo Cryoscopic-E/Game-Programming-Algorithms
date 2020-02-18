@@ -94,7 +94,7 @@ struct Cell
 
 	friend bool operator==(const Cell& lhs, const Cell& rhs)
 	{
-		return lhs.position > rhs.position;
+		return lhs.position == rhs.position;
 	}
 };
 

@@ -63,8 +63,10 @@ const int WIDTH = 12, HEIGHT = 12;
 glm::vec3 floorPositions [WIDTH*HEIGHT];
 std::vector<glm::vec3> wallPositions;
 glm::vec3 goalArrowPosition;
-glm::vec3 aStarSpherePosition;
+glm::vec3 agentPosition;
 std::stack<glm::vec3> aStarPath;
+glm::vec3 agentTarget;
+glm::vec3 agentDirection;
 
 std::vector<std::vector<int>> map =	{ 
 					{1,1,1,1,1,1,1,1,1,1,1,1},
@@ -153,7 +155,7 @@ void startup() {
 		}
 	}
 
-	aStarSpherePosition = glm::vec3(1.0f, 0.5f, 3.0f);
+	agentPosition = glm::vec3(7.0f, 0.5f, 7.0f);
 
 	goalArrowPosition = glm::vec3(6.0f, 1.0f, 4.0f);
 
@@ -222,6 +224,40 @@ void updateCamera() {
 	}
 }
 
+
+void setNewAgentTarget()
+{
+	agentTarget = aStarPath.top();
+	std::cout << "moving though: " << glm::to_string(agentTarget) << std::endl;
+	agentDirection = glm::normalize(agentTarget - agentPosition);
+}
+
+void moveAgentToTarget()
+{
+	float distance = abs(glm::distance(agentTarget, agentPosition));
+	if (distance > 0.1)
+	{
+		agentPosition += agentDirection * deltaTime * 2.0f;
+	}
+	else if (distance < 0.1)
+	{
+		agentPosition = agentTarget;
+		agentTarget = glm::vec3(0);
+		aStarPath.pop();
+	}
+}
+void updateAgentPosition()
+{
+	//if path was calculated
+	if (!aStarPath.empty())
+	{
+		if (agentTarget == glm::vec3(0)) // path not set
+		{
+			setNewAgentTarget();
+		}
+	}
+}
+
 void updateSceneElements() {
 
 	glfwPollEvents();                                // poll callbacks
@@ -234,15 +270,15 @@ void updateSceneElements() {
 	// Do not forget your ( T * R * S ) http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
 
 	// calculate Sphere movement
-
-	//if pathwas calculated
-	if (aStarPath.size() != 0)
+	updateAgentPosition();
+	if (agentTarget != glm::vec3(0))
 	{
-		
+		moveAgentToTarget();
 	}
+	
 
 	glm::mat4 mv_matrix_sphere =
-		glm::translate(aStarSpherePosition) *
+		glm::translate(agentPosition) *
 		glm::mat4(1.0f);
 	mySphere.mv_matrix = myGraphics.viewMatrix * mv_matrix_sphere;
 	mySphere.proj_matrix = myGraphics.proj_matrix;
@@ -342,13 +378,15 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 		if (keyStatus[GLFW_KEY_ENTER])
 		{
 			Astar::getInstance()->setParams(WIDTH, HEIGHT, 4);
-			aStarPath = Astar::getInstance()->path(map,aStarSpherePosition, goalArrowPosition);
-			std::cout << "printing path" << std::endl;
+			std::cout<< "agent position" << glm::to_string(agentPosition) << std::endl;
+			std::cout<< "goal position" << glm::to_string(goalArrowPosition) << std::endl;
+			aStarPath = Astar::getInstance()->path(map,agentPosition, goalArrowPosition);
+			/*std::cout << "printing path" << std::endl;
 			while(!aStarPath.empty())
 			{
 				std::cout << glm::to_string(aStarPath.top()) << std::endl;
 				aStarPath.pop();
-			}
+			}*/
 		}
 	}
 }

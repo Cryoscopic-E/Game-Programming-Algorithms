@@ -23,7 +23,8 @@ std::stack<glm::vec3> Astar::path(std::vector<std::vector<int>> & map, glm::vec3
 
 	Point startPoint = vec3ToPoint(start);
 	Point goalPoint = vec3ToPoint(goal);
-
+	std::cout << "agent position point x:" << startPoint.x << " y:" << startPoint.y << std::endl;
+	std::cout << "goal position point x:" << goalPoint.x << " y:" << goalPoint.y << std::endl;
 	// goal point not in map range
 	if (!isValidPoint(goalPoint))
 	{
@@ -56,10 +57,10 @@ std::stack<glm::vec3> Astar::path(std::vector<std::vector<int>> & map, glm::vec3
 		fringe.pop();
 
 		//closeSet.insert(current.position);
-		//if (std::find(visited.begin(), visited.end(), current) == visited.end())
-		//{
+		if (std::find(visited.begin(), visited.end(), current) == visited.end())
+		{
 			visited.push_back(current);
-		//}
+		}
 		
 
 		std::vector<Point> neighbours = current.position.getNeighbours(this->directions);
@@ -70,16 +71,15 @@ std::stack<glm::vec3> Astar::path(std::vector<std::vector<int>> & map, glm::vec3
 			{
 				if (neighbour == goalPoint) // next is neighbour
 				{
+					std::cout << "path found!" << std::endl;
 					path_found = true;
 					neighbourCell.parent = current.position;
-					//visited.push_back(neighbourCell);
-					std::cout<<"from " << glm::to_string(pointToVec3(current.position)) << std::endl;
-					std::cout << "found" << std::endl;
+					visited.push_back(neighbourCell);
 					break;
 				}
-				else if (std::find(visited.begin(), visited.end(), current) == visited.end() && !isWall(neighbour,map))
+				else if (std::find(visited.begin(), visited.end(), neighbourCell) == visited.end() && !isWall(neighbour,map))
 				{
-					neighbourCell.f = distanceFromStart(neighbour, startPoint) + ((directions == 8)? diagonalHeuristic(neighbour,goalPoint) : manhattanHeuristic(neighbour,goalPoint));
+					neighbourCell.f = distanceFromStart(neighbour, startPoint) + ((directions > 4)? diagonalHeuristic(neighbour,goalPoint) : manhattanHeuristic(neighbour,goalPoint));
 					neighbourCell.parent = current.position;
 					fringe.push(neighbourCell);
 				}
@@ -90,10 +90,11 @@ std::stack<glm::vec3> Astar::path(std::vector<std::vector<int>> & map, glm::vec3
 	// RETURN EMPTY VECTOR IF NO PATH FOUND
 	if (!path_found)
 	{
+		std::cout << "no path" << std::endl;
 		return std::stack<glm::vec3>();
 	}
 	// CONSTRUCT PATH WITH CLOSE SET REVERSE
-	path.push(pointToVec3(goalPoint));
+	//path.push(pointToVec3(goalPoint));
 	Point lastparent;
 	for (int i = visited.size() - 1; i > 0; --i)
 	{
@@ -103,6 +104,7 @@ std::stack<glm::vec3> Astar::path(std::vector<std::vector<int>> & map, glm::vec3
 			lastparent = visited[i].parent;
 		}
 	}
+	std::cout << "path size: " << path.size() << std::endl;
 	return path;
 }
 
