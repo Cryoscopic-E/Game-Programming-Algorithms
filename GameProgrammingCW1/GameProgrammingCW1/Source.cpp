@@ -22,9 +22,11 @@ using namespace std;
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include "graphics.h"
 #include "shapes.h"
-
+#include "Astar.h"
+#include <stack>
 // MAIN FUNCTIONS
 void startup();
 void updateCamera();
@@ -48,19 +50,38 @@ bool		mouseEnabled = true; // keep track of mouse toggle.
 // MAIN GRAPHICS OBJECT
 Graphics    myGraphics;        // Runing all the graphics in this object
 
-// DEMO OBJECTS
-Cube        myCube;
+// SCENE OBJECTS
 Sphere      mySphere;
-Arrow       arrowX;
-Arrow       arrowY;
-Arrow       arrowZ;
+Arrow		myArrow;
 Cube        myFloor;
-Line        myLine;
-Cylinder    myCylinder;
-
+Cube		myWall;
 // Some global variable to do the animation.
 float t = 0.001f;            // Global variable for animation
 
+const int WIDTH = 12, HEIGHT = 12;
+
+glm::vec3 floorPositions [WIDTH*HEIGHT];
+std::vector<glm::vec3> wallPositions;
+glm::vec3 goalArrowPosition;
+glm::vec3 agentPosition;
+std::stack<glm::vec3> aStarPath;
+glm::vec3 agentTarget;
+glm::vec3 agentDirection;
+
+std::vector<std::vector<int>> map =	{ 
+					{1,1,1,1,1,1,1,1,1,1,1,1},
+					{1,0,0,0,0,0,0,0,0,1,0,1},
+					{1,0,1,1,0,0,0,0,0,1,0,1},
+					{1,0,0,0,0,0,0,0,0,1,0,1},
+					{1,0,0,0,1,0,0,0,0,0,0,1},
+					{1,0,0,0,0,1,0,0,0,0,0,1},
+					{1,0,0,0,0,1,1,1,0,0,0,1},
+					{1,0,0,0,1,1,0,0,0,0,0,1},
+					{1,0,0,0,1,0,0,0,0,1,0,1},
+					{1,0,0,0,1,0,0,0,0,1,0,1},
+					{1,0,0,0,0,0,0,0,0,1,0,1},
+					{1,1,1,1,1,1,1,1,1,1,1,1}
+					};
 
 int main()
 {
@@ -114,30 +135,46 @@ void startup() {
 	// Calculate proj_matrix for the first time.
 	myGraphics.aspect = (float)myGraphics.windowWidth / (float)myGraphics.windowHeight;
 	myGraphics.proj_matrix = glm::perspective(glm::radians(50.0f), myGraphics.aspect, 0.1f, 1000.0f);
+	
+	//TODO remove
+	myGraphics.cameraPosition = glm::vec3(12.7f, 11.0f, 12.0f);
+	myGraphics.cameraYaw = -138.0f;
+	myGraphics.cameraPitch = -53.0f;
 
-	// Load Geometry examples
-	myCube.Load();
+	// create vectors for instanced objects
+	int index = 0;
+	for (int i = 0; i < HEIGHT; i++)
+	{
+		for (int j = 0; j < WIDTH; j++)
+		{
+			floorPositions[index++] = glm::vec3(j,0.0f,i);
+			if (map[i][j] == 1)
+			{
+				wallPositions.push_back(glm::vec3(j, 0.5f, i));
+			}
+		}
+	}
 
+	agentPosition = glm::vec3(7.0f, 0.5f, 7.0f);
+
+	goalArrowPosition = glm::vec3(6.0f, 1.0f, 4.0f);
+
+	// Load Geometry AI agent
 	mySphere.Load();
-	mySphere.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);    // You can change the shape fill colour, line colour or linewidth
+	mySphere.fillColor = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
 
-	arrowX.Load(); arrowY.Load(); arrowZ.Load();
-	arrowX.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f); arrowX.lineColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-	arrowY.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); arrowY.lineColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-	arrowZ.fillColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); arrowZ.lineColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+	myArrow.Load();
+	myArrow.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+	myArrow.lineColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
 
-	myFloor.Load();
+	// Load Geometry walls
+	myWall.LoadInstanced(&wallPositions[0], wallPositions.size());
+	myWall.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	
+	// Load Geometry floor
+	myFloor.LoadInstanced(&floorPositions[0],WIDTH*HEIGHT);
 	myFloor.fillColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand Colour
-	myFloor.lineColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand again
-
-	myCylinder.Load();
-	myCylinder.fillColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
-	myCylinder.lineColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-
-	myLine.Load();
-	myLine.fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	myLine.lineColor = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
-	myLine.lineWidth = 5.0f;
+	//myFloor.lineColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand again
 
 	// Optimised Graphics
 	myGraphics.SetOptimisations();        // Cull and depth testing
@@ -187,6 +224,40 @@ void updateCamera() {
 	}
 }
 
+
+void setNewAgentTarget()
+{
+	agentTarget = aStarPath.top();
+	std::cout << "moving though: " << glm::to_string(agentTarget) << std::endl;
+	agentDirection = glm::normalize(agentTarget - agentPosition);
+}
+
+void moveAgentToTarget()
+{
+	float distance = abs(glm::distance(agentTarget, agentPosition));
+	if (distance > 0.1)
+	{
+		agentPosition += agentDirection * deltaTime * 2.0f;
+	}
+	else if (distance < 0.1)
+	{
+		agentPosition = agentTarget;
+		agentTarget = glm::vec3(0);
+		aStarPath.pop();
+	}
+}
+void updateAgentPosition()
+{
+	//if path was calculated
+	if (!aStarPath.empty())
+	{
+		if (agentTarget == glm::vec3(0)) // path not set
+		{
+			setNewAgentTarget();
+		}
+	}
+}
+
 void updateSceneElements() {
 
 	glfwPollEvents();                                // poll callbacks
@@ -198,66 +269,41 @@ void updateSceneElements() {
 
 	// Do not forget your ( T * R * S ) http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
 
-	// Calculate Cube position
-	glm::mat4 mv_matrix_cube =
-		glm::translate(glm::vec3(2.0f, 0.5f, 0.0f)) *
-		glm::mat4(1.0f);
-	myCube.mv_matrix = myGraphics.viewMatrix * mv_matrix_cube;
-	myCube.proj_matrix = myGraphics.proj_matrix;
-
 	// calculate Sphere movement
+	updateAgentPosition();
+	if (agentTarget != glm::vec3(0))
+	{
+		moveAgentToTarget();
+	}
+	
+
 	glm::mat4 mv_matrix_sphere =
-		glm::translate(glm::vec3(-2.0f, 0.5f, 0.0f)) *
-		glm::rotate(-t, glm::vec3(0.0f, 1.0f, 0.0f)) *
-		glm::rotate(-t, glm::vec3(1.0f, 0.0f, 0.0f)) *
+		glm::translate(agentPosition) *
 		glm::mat4(1.0f);
 	mySphere.mv_matrix = myGraphics.viewMatrix * mv_matrix_sphere;
 	mySphere.proj_matrix = myGraphics.proj_matrix;
 
-	//Calculate Arrows translations (note: arrow model points up)
-	glm::mat4 mv_matrix_x =
-		glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)) *
-		glm::rotate(glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) *
-		glm::scale(glm::vec3(0.2f, 0.5f, 0.2f)) *
+	//Calculate Arrow for Astar goal
+	glm::mat4 mv_matrix_arrow =
+		glm::translate(goalArrowPosition) *
+		glm::rotate(glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f))*
+		glm::scale(glm::vec3(1.5f, 1.0f, 1.5f)) *
 		glm::mat4(1.0f);
-	arrowX.mv_matrix = myGraphics.viewMatrix * mv_matrix_x;
-	arrowX.proj_matrix = myGraphics.proj_matrix;
-
-	glm::mat4 mv_matrix_y =
-		glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)) *
-		//glm::rotate(glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) *    // already model pointing up
-		glm::scale(glm::vec3(0.2f, 0.5f, 0.2f)) *
-		glm::mat4(1.0f);
-	arrowY.mv_matrix = myGraphics.viewMatrix * mv_matrix_y;
-	arrowY.proj_matrix = myGraphics.proj_matrix;
-
-	glm::mat4 mv_matrix_z =
-		glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)) *
-		glm::rotate(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) *
-		glm::scale(glm::vec3(0.2f, 0.5f, 0.2f)) *
-		glm::mat4(1.0f);
-	arrowZ.mv_matrix = myGraphics.viewMatrix * mv_matrix_z;
-	arrowZ.proj_matrix = myGraphics.proj_matrix;
+	myArrow.mv_matrix = myGraphics.viewMatrix * mv_matrix_arrow;
+	myArrow.proj_matrix = myGraphics.proj_matrix;
 
 	// Calculate floor position and resize
 	myFloor.mv_matrix = myGraphics.viewMatrix *
 		glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)) *
-		glm::scale(glm::vec3(1000.0f, 0.001f, 1000.0f)) *
+		glm::scale(glm::vec3(1.0f, 0.001f, 1.0f)) *
 		glm::mat4(1.0f);
 	myFloor.proj_matrix = myGraphics.proj_matrix;
 
-	// Calculate cylinder
-	myCylinder.mv_matrix = myGraphics.viewMatrix *
-		glm::translate(glm::vec3(-1.0f, 0.5f, 2.0f)) *
+	//Calculate wall position
+	myWall.mv_matrix = myGraphics.viewMatrix *
+		glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)) *
 		glm::mat4(1.0f);
-	myCylinder.proj_matrix = myGraphics.proj_matrix;
-
-	// Calculate Line
-	myLine.mv_matrix = myGraphics.viewMatrix *
-		glm::translate(glm::vec3(1.0f, 0.5f, 2.0f)) *
-		glm::mat4(1.0f);
-	myLine.proj_matrix = myGraphics.proj_matrix;
-
+	myWall.proj_matrix = myGraphics.proj_matrix;
 
 	t += 0.01f; // increment movement variable
 
@@ -271,16 +317,10 @@ void renderScene() {
 	myGraphics.ClearViewport();
 
 	// Draw objects in screen
-	myFloor.Draw();
-	myCube.Draw();
+	myFloor.DrawInstanced(WIDTH*HEIGHT);
+	myWall.DrawInstanced(wallPositions.size());
 	mySphere.Draw();
-
-	arrowX.Draw();
-	arrowY.Draw();
-	arrowZ.Draw();
-
-	myLine.Draw();
-	myCylinder.Draw();
+	myArrow.Draw();
 }
 
 
@@ -307,6 +347,48 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 	// If exit key pressed.
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
+
+	if (keyStatus[GLFW_KEY_C])
+	{
+		std::cout << "CAM position: " << glm::to_string(myGraphics.cameraPosition) << std::endl;
+		std::cout << "CAM yaw: " << myGraphics.cameraYaw << std::endl;
+		std::cout << "CAM pitch: " << myGraphics.cameraPitch << std::endl;
+	}
+
+
+	if (!mouseEnabled)
+	{
+		if (keyStatus[GLFW_KEY_UP])
+		{
+			goalArrowPosition.z -= 1.0f;
+		}
+		else if (keyStatus[GLFW_KEY_DOWN])
+		{
+			goalArrowPosition.z += 1.0f;
+		}
+		else if (keyStatus[GLFW_KEY_RIGHT])
+		{
+			goalArrowPosition.x += 1.0f;
+		}
+		else if (keyStatus[GLFW_KEY_LEFT])
+		{
+			goalArrowPosition.x -= 1.0f;
+		}
+
+		if (keyStatus[GLFW_KEY_ENTER])
+		{
+			Astar::getInstance()->setParams(WIDTH, HEIGHT, 4);
+			std::cout<< "agent position" << glm::to_string(agentPosition) << std::endl;
+			std::cout<< "goal position" << glm::to_string(goalArrowPosition) << std::endl;
+			aStarPath = Astar::getInstance()->path(map,agentPosition, goalArrowPosition);
+			/*std::cout << "printing path" << std::endl;
+			while(!aStarPath.empty())
+			{
+				std::cout << glm::to_string(aStarPath.top()) << std::endl;
+				aStarPath.pop();
+			}*/
+		}
+	}
 }
 
 void onMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
