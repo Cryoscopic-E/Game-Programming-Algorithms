@@ -64,6 +64,13 @@ public:
 	~Cylinder();
 };
 
+class Quad : public Shapes {
+public:
+	Quad();
+	~Quad();
+};
+
+
 class Line : public Shapes {
 public:
 	Line();

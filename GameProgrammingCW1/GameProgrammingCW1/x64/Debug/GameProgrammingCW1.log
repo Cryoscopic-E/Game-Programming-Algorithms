@@ -1,4 +1,16 @@
-﻿  Source.cpp
-D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(171,62): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
-D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(321,43): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
-  GameProgrammingCW1.vcxproj -> D:\University\GameProgramming\GameProgrammingCW1\x64\Debug\GameProgrammingCW1.exe
+﻿  Shapes.cpp
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(28,39): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(28,91): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(31,72): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(34,72): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(42,39): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(42,91): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(45,72): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(48,72): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(55,40): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(55,94): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(236,58): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(240,58): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(257,80): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(261,80): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+  GameProgrammingCW1.vcxproj -> D:\University\Game-Programming-CW1\GameProgrammingCW1\x64\Debug\GameProgrammingCW1.exe

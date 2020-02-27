@@ -27,16 +27,25 @@
     <ClCompile Include="Astar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ParticleSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Graphics.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Shapes.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="ParticleSystem.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Astar.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shapes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stb_image.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

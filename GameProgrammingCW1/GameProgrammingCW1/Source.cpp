@@ -26,7 +26,9 @@ using namespace std;
 #include "graphics.h"
 #include "shapes.h"
 #include "Astar.h"
+#include "ParticleSystem.h"
 #include <stack>
+
 // MAIN FUNCTIONS
 void startup();
 void updateCamera();
@@ -50,11 +52,15 @@ bool		mouseEnabled = true; // keep track of mouse toggle.
 // MAIN GRAPHICS OBJECT
 Graphics    myGraphics;        // Runing all the graphics in this object
 
+ParticleSystem ps(3000, glm::vec3(0.0f, 2.0f, 0.0f));
+
 // SCENE OBJECTS
 Sphere      mySphere;
 Arrow		myArrow;
 Cube        myFloor;
 Cube		myWall;
+
+Quad test;
 // Some global variable to do the animation.
 float t = 0.001f;            // Global variable for animation
 
@@ -109,7 +115,6 @@ int main()
 
 	}
 
-
 	myGraphics.endProgram();            // Close and clean everything up...
 
    // cout << "\nPress any key to continue...\n";
@@ -136,6 +141,8 @@ void startup() {
 	myGraphics.aspect = (float)myGraphics.windowWidth / (float)myGraphics.windowHeight;
 	myGraphics.proj_matrix = glm::perspective(glm::radians(50.0f), myGraphics.aspect, 0.1f, 1000.0f);
 	
+	ps.Init();
+	
 	//TODO remove
 	myGraphics.cameraPosition = glm::vec3(12.7f, 11.0f, 12.0f);
 	myGraphics.cameraYaw = -138.0f;
@@ -159,6 +166,10 @@ void startup() {
 
 	goalArrowPosition = glm::vec3(6.0f, 1.0f, 4.0f);
 
+
+
+	test.Load();
+	test.fillColor = glm::vec4(1.0f, 0.4f, 0.3f, 1.0f);
 	// Load Geometry AI agent
 	mySphere.Load();
 	mySphere.fillColor = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
@@ -267,6 +278,8 @@ void updateSceneElements() {
 	deltaTime = currentTime - lastTime;                // Calculate delta time
 	lastTime = currentTime;                            // Save for next frame calculations.
 
+
+	//ps.Update(deltaTime);
 	// Do not forget your ( T * R * S ) http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
 
 	// calculate Sphere movement
@@ -276,7 +289,12 @@ void updateSceneElements() {
 		moveAgentToTarget();
 	}
 	
-
+	test.mv_matrix = myGraphics.viewMatrix *
+		glm::translate(glm::vec3(6.0f, 2.0f, 6.0f)) *
+		glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)) *
+		glm::mat4(1.0f);
+	test.proj_matrix = myGraphics.proj_matrix;
+	
 	glm::mat4 mv_matrix_sphere =
 		glm::translate(agentPosition) *
 		glm::mat4(1.0f);
@@ -317,10 +335,12 @@ void renderScene() {
 	myGraphics.ClearViewport();
 
 	// Draw objects in screen
+	test.Draw();
 	myFloor.DrawInstanced(WIDTH*HEIGHT);
 	myWall.DrawInstanced(wallPositions.size());
 	mySphere.Draw();
 	myArrow.Draw();
+	//ps.Render(myGraphics.viewMatrix, myGraphics.proj_matrix);
 }
 
 

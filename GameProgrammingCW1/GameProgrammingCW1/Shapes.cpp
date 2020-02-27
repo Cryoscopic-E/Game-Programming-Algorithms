@@ -83,15 +83,14 @@ void Shapes::Load() {
 	const char * vs_source[] = { R"(
 #version 330 core
 
-in vec4 position;
+layout (location = 0) in vec3 position;
 uniform mat4 mv_matrix;
 uniform mat4 proj_matrix;
 
 void main(void){
-	gl_Position = proj_matrix * mv_matrix * position;
+	gl_Position = proj_matrix * mv_matrix * vec4(position,1.0f);
 }
 )" };
-
 	
 	const char * fs_source[] = { R"(
 #version 330 core
@@ -104,6 +103,7 @@ void main(void){
 }
 )" };
 
+#pragma region Shader Loading
 	program = glCreateProgram();
 	GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fs, 1, fs_source, NULL);
@@ -120,6 +120,10 @@ void main(void){
 
 	glLinkProgram(program);
 
+	glDeleteShader(vs);
+	glDeleteShader(fs);
+#pragma endregion
+
 	mv_location = glGetUniformLocation(program, "mv_matrix");
 	proj_location = glGetUniformLocation(program, "proj_matrix");
 	color_location = glGetUniformLocation(program, "inColor");
@@ -129,10 +133,7 @@ void main(void){
 
 	glGenBuffers(1, &buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	glBufferData(GL_ARRAY_BUFFER,
-		vertexPositions.size() * sizeof(GLfloat),
-		&vertexPositions[0],
-		GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertexPositions.size() * sizeof(GLfloat), &vertexPositions[0], GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 	glEnableVertexAttribArray(0);
 
@@ -208,12 +209,15 @@ void main(void){
 	glBindBuffer(GL_ARRAY_BUFFER, instVBO);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	glVertexAttribDivisor(0, 0);
 	glVertexAttribDivisor(1, 1);
 
 
 
 	glLinkProgram(0);	// unlink
 	glDisableVertexAttribArray(0); // Disable
+	glDisableVertexAttribArray(1);
 	glBindVertexArray(0);	// Unbind
 }
 
@@ -234,6 +238,8 @@ void Shapes::Draw() {
 	glUniform4f(color_location, lineColor.r, lineColor.g, lineColor.b, lineColor.a);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  glLineWidth(lineWidth);
 	glDrawArrays(GL_TRIANGLES, 0, vertexPositions.size() / 3);
+
+	glDisableVertexAttribArray(0); // Disable
 }
 
 void Shapes::DrawInstanced(const int numInstances)
@@ -241,6 +247,7 @@ void Shapes::DrawInstanced(const int numInstances)
 	glUseProgram(program);
 	glBindVertexArray(vao);
 	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 
 	glUniformMatrix4fv(proj_location, 1, GL_FALSE, &proj_matrix[0][0]);
 	glUniformMatrix4fv(mv_location, 1, GL_FALSE, &mv_matrix[0][0]);
@@ -252,6 +259,10 @@ void Shapes::DrawInstanced(const int numInstances)
 	glUniform4f(color_location, lineColor.r, lineColor.g, lineColor.b, lineColor.a);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  glLineWidth(lineWidth);
 	glDrawArraysInstanced(GL_TRIANGLES, 0, vertexPositions.size() / 3,numInstances);
+
+	glDisableVertexAttribArray(0); // Disable
+	glDisableVertexAttribArray(1);
+
 }
 
 
@@ -1110,5 +1121,31 @@ f 6/9/4 2/14/4 1/10/4
 }
 
 Line::~Line() {
+
+}
+
+Quad::Quad() {
+
+	rawData = R"(
+o Plane
+v -1.000000 0.000000 1.000000
+v 1.000000 0.000000 1.000000
+v -1.000000 0.000000 -1.000000
+v 1.000000 0.000000 -1.000000
+vt 1.000000 0.000000
+vt 0.000000 1.000000
+vt 0.000000 0.000000
+vt 1.000000 1.000000
+vn 0.0000 1.0000 0.0000
+usemtl None
+s off
+f 2/1/1 3/2/1 1/3/1
+f 2/1/1 4/4/1 3/2/1
+)";
+
+	LoadObj();
+}
+
+Quad::~Quad() {
 
 }
