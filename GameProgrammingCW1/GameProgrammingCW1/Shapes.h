@@ -15,7 +15,7 @@ public:
 	~Shapes();
 
 	void Load();
-	void LoadInstanced(glm::vec3* positions, const int numInstances);
+	void LoadInstanced(glm::mat4* models, const int num);
 	void Draw();
 	void DrawInstanced(const int numInstances);
 	void  checkErrorShader(GLuint shader);
@@ -24,12 +24,15 @@ public:
 
 	GLuint          program;
 	GLuint          vao;
-	GLuint          buffer;
+	GLuint          vertex_buffer;
+	GLuint			model_buffer;
 	GLint           mv_location;
+	GLint			view_location;
 	GLint           proj_location;
 	GLint           color_location;
 	glm::mat4		proj_matrix = glm::mat4(1.0f);
 	glm::mat4		mv_matrix = glm::mat4(1.0f);
+	glm::mat4		view_matrix = glm::mat4(1.0f);
 
 	glm::vec4		fillColor = glm::vec4(1.0, 0.0, 0.0, 1.0);
 	glm::vec4		lineColor = glm::vec4(0.0, 0.0, 0.0, 1.0);
