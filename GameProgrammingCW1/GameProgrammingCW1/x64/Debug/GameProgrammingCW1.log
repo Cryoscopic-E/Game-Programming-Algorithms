@@ -1,4 +1,5 @@
 ﻿  Source.cpp
-D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(171,62): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
-D:\University\GameProgramming\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(321,43): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
-  GameProgrammingCW1.vcxproj -> D:\University\GameProgramming\GameProgrammingCW1\x64\Debug\GameProgrammingCW1.exe
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(183,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(214,59): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(391,43): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+  GameProgrammingCW1.vcxproj -> D:\University\Game-Programming-CW1\GameProgrammingCW1\x64\Debug\GameProgrammingCW1.exe

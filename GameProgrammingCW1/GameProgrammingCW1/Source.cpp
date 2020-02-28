@@ -13,6 +13,7 @@
 // Standard C++ libraries
 #include <iostream>
 #include <vector>
+#include <time.h>
 using namespace std;
 
 // Helper graphic libraries
@@ -26,7 +27,9 @@ using namespace std;
 #include "graphics.h"
 #include "shapes.h"
 #include "Astar.h"
+#include "ParticleSystem.h"
 #include <stack>
+
 // MAIN FUNCTIONS
 void startup();
 void updateCamera();
@@ -50,11 +53,17 @@ bool		mouseEnabled = true; // keep track of mouse toggle.
 // MAIN GRAPHICS OBJECT
 Graphics    myGraphics;        // Runing all the graphics in this object
 
+ParticleSystem ps(3000, glm::vec3(0.0f, 2.0f, 0.0f));
+
 // SCENE OBJECTS
 Sphere      mySphere;
 Arrow		myArrow;
 Cube        myFloor;
 Cube		myWall;
+
+Quad test;
+
+Cylinder test1000000;
 // Some global variable to do the animation.
 float t = 0.001f;            // Global variable for animation
 
@@ -67,6 +76,12 @@ glm::vec3 agentPosition;
 std::stack<glm::vec3> aStarPath;
 glm::vec3 agentTarget;
 glm::vec3 agentDirection;
+
+
+glm::mat4* wallmodels;
+glm::mat4* floormodels;
+
+glm::mat4* cilymodoles;
 
 std::vector<std::vector<int>> map =	{ 
 					{1,1,1,1,1,1,1,1,1,1,1,1},
@@ -109,7 +124,6 @@ int main()
 
 	}
 
-
 	myGraphics.endProgram();            // Close and clean everything up...
 
    // cout << "\nPress any key to continue...\n";
@@ -136,6 +150,8 @@ void startup() {
 	myGraphics.aspect = (float)myGraphics.windowWidth / (float)myGraphics.windowHeight;
 	myGraphics.proj_matrix = glm::perspective(glm::radians(50.0f), myGraphics.aspect, 0.1f, 1000.0f);
 	
+	ps.Init();
+	
 	//TODO remove
 	myGraphics.cameraPosition = glm::vec3(12.7f, 11.0f, 12.0f);
 	myGraphics.cameraYaw = -138.0f;
@@ -155,10 +171,29 @@ void startup() {
 		}
 	}
 
+	floormodels = new glm::mat4[144];
+	wallmodels = new glm::mat4[wallPositions.size()];
+
 	agentPosition = glm::vec3(7.0f, 0.5f, 7.0f);
 
 	goalArrowPosition = glm::vec3(6.0f, 1.0f, 4.0f);
 
+
+	cilymodoles = new glm::mat4[100000];
+	srand(time(0));
+	for (int i = 0; i < 100000; i++)
+	{
+		glm::vec3 pos = glm::vec3(i,i,i);
+		cilymodoles[i] =
+			glm::translate(pos) *
+			glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)) *
+			glm::mat4(1.0f);
+	}
+
+	test1000000.LoadInstanced(&cilymodoles[0], 100000);
+
+	test.Load();
+	test.fillColor = glm::vec4(1.0f, 0.4f, 0.3f, 1.0f);
 	// Load Geometry AI agent
 	mySphere.Load();
 	mySphere.fillColor = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
@@ -167,12 +202,26 @@ void startup() {
 	myArrow.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
 	myArrow.lineColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
 
+
+	for (int i = 0; i < wallPositions.size(); i++)
+	{
+		wallmodels[i] =
+			glm::translate(wallPositions[i]) *
+			glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)) *
+			glm::mat4(1.0f);
+	}
 	// Load Geometry walls
-	myWall.LoadInstanced(&wallPositions[0], wallPositions.size());
+	myWall.LoadInstanced(&wallmodels[0], wallPositions.size());
 	myWall.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	
+	for (int i = 0; i < 144; i++)
+	{
+		floormodels[i] = glm::translate(floorPositions[i]) *
+			glm::scale(glm::vec3(1.0f, 0.001f, 1.0f)) *
+			glm::mat4(1.0f);
+	}
 	// Load Geometry floor
-	myFloor.LoadInstanced(&floorPositions[0],WIDTH*HEIGHT);
+	myFloor.LoadInstanced(&floormodels[0],WIDTH*HEIGHT);
 	myFloor.fillColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand Colour
 	//myFloor.lineColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand again
 
@@ -267,6 +316,8 @@ void updateSceneElements() {
 	deltaTime = currentTime - lastTime;                // Calculate delta time
 	lastTime = currentTime;                            // Save for next frame calculations.
 
+
+	//ps.Update(deltaTime);
 	// Do not forget your ( T * R * S ) http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
 
 	// calculate Sphere movement
@@ -276,7 +327,12 @@ void updateSceneElements() {
 		moveAgentToTarget();
 	}
 	
-
+	test.mv_matrix = myGraphics.viewMatrix *
+		glm::translate(glm::vec3(6.0f, 2.0f, 6.0f)) *
+		glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)) *
+		glm::mat4(1.0f);
+	test.proj_matrix = myGraphics.proj_matrix;
+	
 	glm::mat4 mv_matrix_sphere =
 		glm::translate(agentPosition) *
 		glm::mat4(1.0f);
@@ -293,17 +349,30 @@ void updateSceneElements() {
 	myArrow.proj_matrix = myGraphics.proj_matrix;
 
 	// Calculate floor position and resize
-	myFloor.mv_matrix = myGraphics.viewMatrix *
-		glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)) *
-		glm::scale(glm::vec3(1.0f, 0.001f, 1.0f)) *
-		glm::mat4(1.0f);
+	myFloor.view_matrix = myGraphics.viewMatrix;
 	myFloor.proj_matrix = myGraphics.proj_matrix;
+	/*for (int i = 0; i < floormodels->length(); i++)
+	{
+		floormodels[i] = glm::translate(floorPositions[i]) *
+			glm::scale(glm::vec3(1.0f, 0.001f, 1.0f)) *
+			glm::mat4(1.0f);
+	}*/
+	
+	test1000000.view_matrix = myGraphics.viewMatrix;
+	test1000000.proj_matrix = myGraphics.proj_matrix;
 
 	//Calculate wall position
-	myWall.mv_matrix = myGraphics.viewMatrix *
-		glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)) *
-		glm::mat4(1.0f);
+	myWall.view_matrix = myGraphics.viewMatrix;
 	myWall.proj_matrix = myGraphics.proj_matrix;
+	/*for (int i = 0; i < wallmodels->length(); i++)
+	{
+		wallmodels[i] = 
+			glm::translate(wallPositions[i]) *
+			glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)) *
+			glm::mat4(1.0f);
+	}*/
+	
+	
 
 	t += 0.01f; // increment movement variable
 
@@ -317,10 +386,13 @@ void renderScene() {
 	myGraphics.ClearViewport();
 
 	// Draw objects in screen
+	test.Draw();
 	myFloor.DrawInstanced(WIDTH*HEIGHT);
 	myWall.DrawInstanced(wallPositions.size());
 	mySphere.Draw();
 	myArrow.Draw();
+	test1000000.DrawInstanced(100000);
+	//ps.Render(myGraphics.viewMatrix, myGraphics.proj_matrix);
 }
 
 
