@@ -12,6 +12,19 @@ using namespace std;
 
 void ErrorCallbackGLFW(int error, const char* description);
 
+struct CamTransform {
+	glm::vec3 position;
+	float pitch;
+	float yaw;
+
+	CamTransform(glm::vec3 pos, float y, float p)
+	{
+		position = pos;
+		pitch = p;
+		yaw = y;
+	}
+};
+
 class Graphics {
 public:
 	Graphics();
@@ -24,6 +37,7 @@ public:
 	void SetOptimisations();
 	void ClearViewport();
 	void ToggleMouse();
+	void NextScene(CamTransform t);
 
 
 	GLFWwindow*		window;

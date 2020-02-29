@@ -117,3 +117,10 @@ void Graphics::ToggleMouse() {
 	showingMouse = !showingMouse; // toggle
 }
 
+void Graphics::NextScene(CamTransform t)
+{
+	cameraPosition = t.position;
+	cameraYaw = t.yaw;
+	cameraPitch = t.pitch;
+}
+

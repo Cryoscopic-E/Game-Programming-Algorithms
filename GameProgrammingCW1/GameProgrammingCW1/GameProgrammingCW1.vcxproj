@@ -155,6 +155,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Astar.cpp" />
+    <ClCompile Include="Body.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="Shapes.cpp" />
@@ -162,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Astar.h" />
+    <ClInclude Include="Body.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="Shapes.h" />

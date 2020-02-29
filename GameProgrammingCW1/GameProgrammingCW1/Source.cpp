@@ -14,21 +14,22 @@
 #include <iostream>
 #include <vector>
 #include <time.h>
+#include <stack>
 using namespace std;
 
 // Helper graphic libraries
 #include <GL/glew.h>
-
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/string_cast.hpp>
+
+// Custom libraries
 #include "graphics.h"
 #include "shapes.h"
 #include "Astar.h"
-#include "ParticleSystem.h"
-#include <stack>
+
 
 // MAIN FUNCTIONS
 void startup();
@@ -51,39 +52,43 @@ bool        keyStatus[1024];    // Hold key status.
 bool		mouseEnabled = true; // keep track of mouse toggle.
 
 // MAIN GRAPHICS OBJECT
-Graphics    myGraphics;        // Runing all the graphics in this object
+Graphics    myGraphics;   
 
-ParticleSystem ps(3000, glm::vec3(0.0f, 2.0f, 0.0f));
+// CUSTOM DEFINITIONS
 
-// SCENE OBJECTS
-Sphere      mySphere;
-Arrow		myArrow;
-Cube        myFloor;
-Cube		myWall;
+#pragma region CAMERA POSITIONS DEFINITIONS
+const int MAXSCENES = 1;
+int currentScene = 0;
+CamTransform scenes[] = {CamTransform(glm::vec3(12.7f, 11.0f, 12.0f),-138.0f,-53.0f)};
+#pragma endregion
 
-Quad test;
+#pragma region ASTAR DEFINITIONS
+// ASTAR SHAPES
+Sphere      astarAgent;
+Arrow		astarGoal;
+Cube        floorTiles;
+Cube		walls;
 
-Cylinder test1000000;
-// Some global variable to do the animation.
-float t = 0.001f;            // Global variable for animation
-
-const int WIDTH = 12, HEIGHT = 12;
-
-glm::vec3 floorPositions [WIDTH*HEIGHT];
-std::vector<glm::vec3> wallPositions;
-glm::vec3 goalArrowPosition;
+// ASTAR VARIABLES
 glm::vec3 agentPosition;
-std::stack<glm::vec3> aStarPath;
 glm::vec3 agentTarget;
 glm::vec3 agentDirection;
 
+glm::vec3 goalArrowPosition;
+
+std::stack<glm::vec3> aStarPath;
+
+std::vector<glm::vec3> floorPositions;
+std::vector<glm::vec3> wallPositions;
 
 glm::mat4* wallmodels;
 glm::mat4* floormodels;
 
-glm::mat4* cilymodoles;
+//MAP
 
-std::vector<std::vector<int>> map =	{ 
+const int WIDTH = 12, HEIGHT = 12;
+
+std::vector<std::vector<int>> map = {
 					{1,1,1,1,1,1,1,1,1,1,1,1},
 					{1,0,0,0,0,0,0,0,0,1,0,1},
 					{1,0,1,1,0,0,0,0,0,1,0,1},
@@ -96,14 +101,30 @@ std::vector<std::vector<int>> map =	{
 					{1,0,0,0,1,0,0,0,0,1,0,1},
 					{1,0,0,0,0,0,0,0,0,1,0,1},
 					{1,1,1,1,1,1,1,1,1,1,1,1}
-					};
+};
+
+// ASTAR FUNCTIONS
+void setNewAgentTarget();
+void moveAgentToTarget();
+void updateAgentPosition();
+#pragma endregion
+
+
+// Some global variable to do the animation.
+float t = 0.001f;            
+
+
+// STARDARD FUNCTIONS
 
 int main()
 {
-	int errorGraphics = myGraphics.Init();			// Launch window and graphics context
-	if (errorGraphics) return 0;					// Close if something went wrong...
+	// Launch window and graphics context
+	int errorGraphics = myGraphics.Init();			
+	// Close if something went wrong...
+	if (errorGraphics) return 0;					
 
-	startup();										// Setup all necessary information for startup (aka. load texture, shaders, models, etc).
+	// Setup all necessary information for startup (aka. load texture, shaders, models, etc).
+	startup();										
 
 
 
@@ -120,114 +141,108 @@ int main()
 		renderScene();
 
 		// Swap the back buffer with the front buffer, making the most recently rendered image visible on-screen.
-		glfwSwapBuffers(myGraphics.window);        // swap buffers (avoid flickering and tearing)
+		glfwSwapBuffers(myGraphics.window);  
 
 	}
 
-	myGraphics.endProgram();            // Close and clean everything up...
+	myGraphics.endProgram();         
 
-   // cout << "\nPress any key to continue...\n";
-   // cin.ignore(); cin.get(); // delay closing console to read debugging errors.
 
 	return 0;
 }
 
 void startup() {
-	// Keep track of the running time
-	GLfloat currentTime = (GLfloat)glfwGetTime();    // retrieve timelapse
-	deltaTime = currentTime;                        // start delta time
-	lastTime = currentTime;                            // Save for next frame calculations.
 
-	// Callback graphics and key update functions - declared in main to avoid scoping complexity.
-	// More information here : https://www.glfw.org/docs/latest/input_guide.html
-	glfwSetWindowSizeCallback(myGraphics.window, onResizeCallback);            // Set callback for resize
-	glfwSetKeyCallback(myGraphics.window, onKeyCallback);                    // Set Callback for keys
-	glfwSetMouseButtonCallback(myGraphics.window, onMouseButtonCallback);    // Set callback for mouse click
-	glfwSetCursorPosCallback(myGraphics.window, onMouseMoveCallback);        // Set callback for mouse move
-	glfwSetScrollCallback(myGraphics.window, onMouseWheelCallback);            // Set callback for mouse wheel.
+	#pragma region STANDARD SETUP CODE
+	// KEEP TRACK OF THE RUNNING TIME
+
+	// retrieve timelapse
+	GLfloat currentTime = (GLfloat)glfwGetTime();
+	// start delta time
+	deltaTime = currentTime;
+	// Save for next frame calculations.
+	lastTime = currentTime;
+
+	// CALLBACK GRAPHICS AND KEY UPDATE FUNCTIONS 
+	glfwSetWindowSizeCallback(myGraphics.window, onResizeCallback);
+	glfwSetKeyCallback(myGraphics.window, onKeyCallback);
+	glfwSetMouseButtonCallback(myGraphics.window, onMouseButtonCallback);
+	glfwSetCursorPosCallback(myGraphics.window, onMouseMoveCallback);
+	glfwSetScrollCallback(myGraphics.window, onMouseWheelCallback);
 
 	// Calculate proj_matrix for the first time.
 	myGraphics.aspect = (float)myGraphics.windowWidth / (float)myGraphics.windowHeight;
 	myGraphics.proj_matrix = glm::perspective(glm::radians(50.0f), myGraphics.aspect, 0.1f, 1000.0f);
-	
-	ps.Init();
-	
-	//TODO remove
-	myGraphics.cameraPosition = glm::vec3(12.7f, 11.0f, 12.0f);
-	myGraphics.cameraYaw = -138.0f;
-	myGraphics.cameraPitch = -53.0f;
 
-	// create vectors for instanced objects
-	int index = 0;
-	for (int i = 0; i < HEIGHT; i++)
-	{
-		for (int j = 0; j < WIDTH; j++)
+	// Set first scene camera position (astar)
+	myGraphics.NextScene(scenes[0]);
+
+#pragma endregion
+
+
+	// Custom Setup
+
+	#pragma region ASTAR SETUP CODE
+
+		// read map and create vectors for instanced objects
+		int index = 0;
+		for (int i = 0; i < HEIGHT; i++)
 		{
-			floorPositions[index++] = glm::vec3(j,0.0f,i);
-			if (map[i][j] == 1)
+			for (int j = 0; j < WIDTH; j++)
 			{
-				wallPositions.push_back(glm::vec3(j, 0.5f, i));
+				floorPositions.push_back(glm::vec3(j, 0.0f, i));
+				if (map[i][j] == 1)
+				{
+					wallPositions.push_back(glm::vec3(j, 0.5f, i));
+				}
 			}
 		}
-	}
-
-	floormodels = new glm::mat4[144];
-	wallmodels = new glm::mat4[wallPositions.size()];
-
-	agentPosition = glm::vec3(7.0f, 0.5f, 7.0f);
-
-	goalArrowPosition = glm::vec3(6.0f, 1.0f, 4.0f);
-
-
-	cilymodoles = new glm::mat4[100000];
-	srand(time(0));
-	for (int i = 0; i < 100000; i++)
-	{
-		glm::vec3 pos = glm::vec3(i,i,i);
-		cilymodoles[i] =
-			glm::translate(pos) *
-			glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)) *
-			glm::mat4(1.0f);
-	}
-
-	test1000000.LoadInstanced(&cilymodoles[0], 100000);
-
-	test.Load();
-	test.fillColor = glm::vec4(1.0f, 0.4f, 0.3f, 1.0f);
-	// Load Geometry AI agent
-	mySphere.Load();
-	mySphere.fillColor = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
-
-	myArrow.Load();
-	myArrow.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-	myArrow.lineColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-
-
-	for (int i = 0; i < wallPositions.size(); i++)
-	{
-		wallmodels[i] =
-			glm::translate(wallPositions[i]) *
-			glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)) *
-			glm::mat4(1.0f);
-	}
-	// Load Geometry walls
-	myWall.LoadInstanced(&wallmodels[0], wallPositions.size());
-	myWall.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	
-	for (int i = 0; i < 144; i++)
-	{
-		floormodels[i] = glm::translate(floorPositions[i]) *
-			glm::scale(glm::vec3(1.0f, 0.001f, 1.0f)) *
-			glm::mat4(1.0f);
-	}
-	// Load Geometry floor
-	myFloor.LoadInstanced(&floormodels[0],WIDTH*HEIGHT);
-	myFloor.fillColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand Colour
-	//myFloor.lineColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand again
+		// FLOORS
+		// init floor model matrices
+		floormodels = new glm::mat4[floorPositions.size()];
+		for (int i = 0; i < 144; i++)
+		{
+			floormodels[i] = glm::translate(floorPositions[i]) *
+				glm::scale(glm::vec3(1.0f, 0.001f, 1.0f)) *
+				glm::mat4(1.0f);
+		}
+		// Load shape floor tile
+		floorTiles.LoadInstanced(&floormodels[0], WIDTH * HEIGHT);
+		floorTiles.fillColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);
+
+
+		// WALLS
+		// init wall model matrices
+		wallmodels = new glm::mat4[wallPositions.size()];
+		for (int i = 0; i < wallPositions.size(); i++)
+		{
+			wallmodels[i] =
+				glm::translate(wallPositions[i]) *
+				glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)) *
+				glm::mat4(1.0f);
+		}
+
+		// Load shape walls
+		walls.LoadInstanced(&wallmodels[0], wallPositions.size());
+		walls.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+
+		// initialize agent
+		astarAgent.Load();
+		astarAgent.fillColor = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
+		agentPosition = glm::vec3(7.0f, 0.5f, 7.0f);
+
+		// initialize goal arrow
+		astarGoal.Load();
+		astarGoal.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+		astarGoal.lineColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+		goalArrowPosition = glm::vec3(6.0f, 1.0f, 4.0f);
+
+	#pragma endregion
+
 
 	// Optimised Graphics
-	myGraphics.SetOptimisations();        // Cull and depth testing
-
+	myGraphics.SetOptimisations();
 }
 
 void updateCamera() {
@@ -264,6 +279,15 @@ void updateCamera() {
 	if (keyStatus[GLFW_KEY_A]) myGraphics.cameraPosition -= glm::normalize(glm::cross(myGraphics.cameraFront, myGraphics.cameraUp)) * cameraSpeed;
 	if (keyStatus[GLFW_KEY_D]) myGraphics.cameraPosition += glm::normalize(glm::cross(myGraphics.cameraFront, myGraphics.cameraUp)) * cameraSpeed;
 
+	if (!mouseEnabled && keyStatus[GLFW_KEY_N])
+	{
+		currentScene = ++currentScene % MAXSCENES;
+		myGraphics.NextScene(scenes[currentScene]);
+		myGraphics.viewMatrix = glm::lookAt(myGraphics.cameraPosition,			// eye
+			myGraphics.cameraPosition + myGraphics.cameraFront,					// centre
+			myGraphics.cameraUp);
+	}
+
 	// IMPORTANT PART
 	// Calculate my view matrix using the lookAt helper function
 	if (mouseEnabled) {
@@ -273,111 +297,63 @@ void updateCamera() {
 	}
 }
 
-
-void setNewAgentTarget()
-{
-	agentTarget = aStarPath.top();
-	std::cout << "moving though: " << glm::to_string(agentTarget) << std::endl;
-	agentDirection = glm::normalize(agentTarget - agentPosition);
-}
-
-void moveAgentToTarget()
-{
-	float distance = abs(glm::distance(agentTarget, agentPosition));
-	if (distance > 0.1)
-	{
-		agentPosition += agentDirection * deltaTime * 2.0f;
-	}
-	else if (distance < 0.1)
-	{
-		agentPosition = agentTarget;
-		agentTarget = glm::vec3(0);
-		aStarPath.pop();
-	}
-}
-void updateAgentPosition()
-{
-	//if path was calculated
-	if (!aStarPath.empty())
-	{
-		if (agentTarget == glm::vec3(0)) // path not set
-		{
-			setNewAgentTarget();
-		}
-	}
-}
-
 void updateSceneElements() {
 
-	glfwPollEvents();                                // poll callbacks
+	// poll callbacks
+	glfwPollEvents();                                
 
-	// Calculate frame time/period -- used for all (physics, animation, logic, etc).
-	GLfloat currentTime = (GLfloat)glfwGetTime();    // retrieve timelapse
-	deltaTime = currentTime - lastTime;                // Calculate delta time
-	lastTime = currentTime;                            // Save for next frame calculations.
+	#pragma region CALCULATE FRAME TIME/PERIOD
+		// retrieve timelapse
+		GLfloat currentTime = (GLfloat)glfwGetTime();
+		// Calculate delta time
+		deltaTime = currentTime - lastTime;
+		// Save for next frame calculations.
+		lastTime = currentTime;
+	#pragma endregion
 
+	                          
+	// Custom Updates
 
-	//ps.Update(deltaTime);
-	// Do not forget your ( T * R * S ) http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
-
-	// calculate Sphere movement
-	updateAgentPosition();
-	if (agentTarget != glm::vec3(0))
-	{
-		moveAgentToTarget();
-	}
-	
-	test.mv_matrix = myGraphics.viewMatrix *
-		glm::translate(glm::vec3(6.0f, 2.0f, 6.0f)) *
-		glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)) *
-		glm::mat4(1.0f);
-	test.proj_matrix = myGraphics.proj_matrix;
-	
-	glm::mat4 mv_matrix_sphere =
-		glm::translate(agentPosition) *
-		glm::mat4(1.0f);
-	mySphere.mv_matrix = myGraphics.viewMatrix * mv_matrix_sphere;
-	mySphere.proj_matrix = myGraphics.proj_matrix;
-
-	//Calculate Arrow for Astar goal
-	glm::mat4 mv_matrix_arrow =
-		glm::translate(goalArrowPosition) *
-		glm::rotate(glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f))*
-		glm::scale(glm::vec3(1.5f, 1.0f, 1.5f)) *
-		glm::mat4(1.0f);
-	myArrow.mv_matrix = myGraphics.viewMatrix * mv_matrix_arrow;
-	myArrow.proj_matrix = myGraphics.proj_matrix;
-
-	// Calculate floor position and resize
-	myFloor.view_matrix = myGraphics.viewMatrix;
-	myFloor.proj_matrix = myGraphics.proj_matrix;
-	/*for (int i = 0; i < floormodels->length(); i++)
-	{
-		floormodels[i] = glm::translate(floorPositions[i]) *
-			glm::scale(glm::vec3(1.0f, 0.001f, 1.0f)) *
-			glm::mat4(1.0f);
-	}*/
-	
-	test1000000.view_matrix = myGraphics.viewMatrix;
-	test1000000.proj_matrix = myGraphics.proj_matrix;
-
-	//Calculate wall position
-	myWall.view_matrix = myGraphics.viewMatrix;
-	myWall.proj_matrix = myGraphics.proj_matrix;
-	/*for (int i = 0; i < wallmodels->length(); i++)
-	{
-		wallmodels[i] = 
-			glm::translate(wallPositions[i]) *
-			glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)) *
-			glm::mat4(1.0f);
-	}*/
-	
-	
-
-	t += 0.01f; // increment movement variable
+	#pragma region ASTAR UPDATE
 
 
-	if (glfwWindowShouldClose(myGraphics.window) == GL_TRUE) quit = true; // If quit by pressing x on window.
+			// Calculate Agent movement
+			updateAgentPosition();
+			if (agentTarget != glm::vec3(0))
+			{
+				moveAgentToTarget();
+			}
+
+			// Agent model-view-projection
+			astarAgent.mv_matrix = myGraphics.viewMatrix *
+				glm::translate(agentPosition) *
+				glm::mat4(1.0f);
+			astarAgent.proj_matrix = myGraphics.proj_matrix;
+
+			// Goal arrow model-view-projection
+			astarGoal.mv_matrix = myGraphics.viewMatrix *
+				glm::translate(goalArrowPosition) *
+				glm::rotate(glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f)) *
+				glm::scale(glm::vec3(1.5f, 1.0f, 1.5f)) *
+				glm::mat4(1.0f);
+			astarGoal.proj_matrix = myGraphics.proj_matrix;
+
+			// Walls view-projection (model passed as attribute array pointers)
+			walls.view_matrix = myGraphics.viewMatrix;
+			walls.proj_matrix = myGraphics.proj_matrix;
+
+			// Floors view-projection (model passed as attribute array pointer)
+			floorTiles.view_matrix = myGraphics.viewMatrix;
+			floorTiles.proj_matrix = myGraphics.proj_matrix;
+
+	#pragma endregion
+
+
+	// increment movement variable
+	t += 0.01f; 
+
+	// If quit by pressing x on window.
+	if (glfwWindowShouldClose(myGraphics.window) == GL_TRUE) quit = true; 
 
 }
 
@@ -385,18 +361,97 @@ void renderScene() {
 	// Clear viewport - start a new frame.
 	myGraphics.ClearViewport();
 
-	// Draw objects in screen
-	test.Draw();
-	myFloor.DrawInstanced(WIDTH*HEIGHT);
-	myWall.DrawInstanced(wallPositions.size());
-	mySphere.Draw();
-	myArrow.Draw();
-	test1000000.DrawInstanced(100000);
-	//ps.Render(myGraphics.viewMatrix, myGraphics.proj_matrix);
+	// Custom Rendering
+
+	#pragma region ASTAR RENDER
+
+	floorTiles.DrawInstanced(WIDTH * HEIGHT);
+	walls.DrawInstanced(wallPositions.size());
+	astarAgent.Draw();
+	astarGoal.Draw();
+
+#pragma endregion
+
+
 }
 
 
-// CallBack functions low level functionality.
+// CUSTOM FUNCTIONS
+
+#pragma region ASTAR FUNCTIONS
+
+	void setNewAgentTarget()
+	{
+		agentTarget = aStarPath.top();
+		std::cout << "moving though: " << glm::to_string(agentTarget) << std::endl;
+		agentDirection = glm::normalize(agentTarget - agentPosition);
+	}
+
+	void moveAgentToTarget()
+	{
+		float distance = abs(glm::distance(agentTarget, agentPosition));
+		if (distance > 0.1)
+		{
+			agentPosition += agentDirection * deltaTime * 2.0f;
+		}
+		else if (distance < 0.1)
+		{
+			agentPosition = agentTarget;
+			agentTarget = glm::vec3(0);
+			aStarPath.pop();
+		}
+	}
+
+	void updateAgentPosition()
+	{
+		//if path was calculated
+		if (!aStarPath.empty())
+		{
+			if (agentTarget == glm::vec3(0)) // path not set
+			{
+				setNewAgentTarget();
+			}
+		}
+	}
+
+	void checkAstarInput()
+	{
+		if (!mouseEnabled)
+		{
+			if (keyStatus[GLFW_KEY_UP])
+			{
+				goalArrowPosition.z -= 1.0f;
+			}
+			else if (keyStatus[GLFW_KEY_DOWN])
+			{
+				goalArrowPosition.z += 1.0f;
+			}
+			else if (keyStatus[GLFW_KEY_RIGHT])
+			{
+				goalArrowPosition.x += 1.0f;
+			}
+			else if (keyStatus[GLFW_KEY_LEFT])
+			{
+				goalArrowPosition.x -= 1.0f;
+			}
+
+			if (keyStatus[GLFW_KEY_ENTER])
+			{
+				Astar::getInstance()->setParams(WIDTH, HEIGHT, 4);
+				std::cout << "agent position" << glm::to_string(agentPosition) << std::endl;
+				std::cout << "goal position" << glm::to_string(goalArrowPosition) << std::endl;
+				aStarPath = Astar::getInstance()->path(map, agentPosition, goalArrowPosition);
+			}
+		}
+	}
+
+#pragma endregion
+
+
+
+// CALL BACKS
+#pragma region CALL BACK FUNCTIONS
+
 void onResizeCallback(GLFWwindow* window, int w, int h) {    // call everytime the window is resized
 	//myGraphics.windowWidth = w;
 	//myGraphics.windowHeight = h;
@@ -420,47 +475,21 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-	if (keyStatus[GLFW_KEY_C])
-	{
-		std::cout << "CAM position: " << glm::to_string(myGraphics.cameraPosition) << std::endl;
-		std::cout << "CAM yaw: " << myGraphics.cameraYaw << std::endl;
-		std::cout << "CAM pitch: " << myGraphics.cameraPitch << std::endl;
-	}
+	#pragma region CUSTOM INPUT
 
 
-	if (!mouseEnabled)
-	{
-		if (keyStatus[GLFW_KEY_UP])
+		switch (currentScene)
 		{
-			goalArrowPosition.z -= 1.0f;
+			//0-ASTAR SCENE
+			case 0:
+				checkAstarInput();
+			default:
+				break;
 		}
-		else if (keyStatus[GLFW_KEY_DOWN])
-		{
-			goalArrowPosition.z += 1.0f;
-		}
-		else if (keyStatus[GLFW_KEY_RIGHT])
-		{
-			goalArrowPosition.x += 1.0f;
-		}
-		else if (keyStatus[GLFW_KEY_LEFT])
-		{
-			goalArrowPosition.x -= 1.0f;
-		}
+	#pragma endregion
 
-		if (keyStatus[GLFW_KEY_ENTER])
-		{
-			Astar::getInstance()->setParams(WIDTH, HEIGHT, 4);
-			std::cout<< "agent position" << glm::to_string(agentPosition) << std::endl;
-			std::cout<< "goal position" << glm::to_string(goalArrowPosition) << std::endl;
-			aStarPath = Astar::getInstance()->path(map,agentPosition, goalArrowPosition);
-			/*std::cout << "printing path" << std::endl;
-			while(!aStarPath.empty())
-			{
-				std::cout << glm::to_string(aStarPath.top()) << std::endl;
-				aStarPath.pop();
-			}*/
-		}
-	}
+
+	
 }
 
 void onMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
@@ -483,3 +512,6 @@ void onMouseMoveCallback(GLFWwindow* window, double x, double y) {
 void onMouseWheelCallback(GLFWwindow* window, double xoffset, double yoffset) {
 	int yoffsetInt = static_cast<int>(yoffset);
 }
+	
+#pragma endregion
+
