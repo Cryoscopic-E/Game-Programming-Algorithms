@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+
 Shapes::Shapes() {
 
 };
@@ -238,8 +239,6 @@ void Shapes::LoadInstanced(glm::mat4* models, const int num)
 	glBindVertexArray(0);	// Unbind
 }
 
-
-
 void Shapes::Draw() {
 	glUseProgram(program);
 	glBindVertexArray(vao);
@@ -297,7 +296,8 @@ void Shapes::DrawInstanced(const int numInstances)
 void Shapes::UpdateModelBuffer(glm::mat4* models, const int num)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, model_buffer);
-	glBufferData(GL_ARRAY_BUFFER, num * sizeof(glm::mat4), &models[0], GL_STREAM_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, num * sizeof(glm::mat4), NULL, GL_STREAM_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER,0, num * sizeof(glm::mat4), &models[0]);
 }
 
 

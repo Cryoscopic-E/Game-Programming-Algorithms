@@ -1,25 +1,8 @@
-﻿  Body.cpp
-  Player.cpp
-  Shapes.cpp
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(28,39): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(28,91): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(31,72): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(34,72): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(42,39): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(42,91): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(45,72): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(48,72): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(55,40): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(55,94): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(253,58): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(257,58): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(281,80): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Shapes.cpp(285,80): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-  Source.cpp
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(324,59): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(370,99): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(668,42): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(678,68): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
-D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(689,66): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
-  Generating Code...
+﻿  Source.cpp
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(345,59): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(391,99): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(698,42): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(708,68): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(719,66): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+D:\University\Game-Programming-CW1\GameProgrammingCW1\GameProgrammingCW1\Source.cpp(928,30): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
   GameProgrammingCW1.vcxproj -> D:\University\Game-Programming-CW1\GameProgrammingCW1\x64\Debug\GameProgrammingCW1.exe

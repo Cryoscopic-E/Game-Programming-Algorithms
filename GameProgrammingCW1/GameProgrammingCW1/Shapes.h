@@ -16,6 +16,7 @@ public:
 
 	void Load();
 	void LoadInstanced(glm::mat4* models, const int num);
+	void LoadParticles(glm::mat4* models, const int num);
 	void Draw();
 	void DrawInstanced(const int numInstances);
 	void UpdateModelBuffer(glm::mat4* models, const int num);
@@ -25,12 +26,14 @@ public:
 
 	GLuint          program;
 	GLuint          vao;
+	GLuint			texture;
 	GLuint          vertex_buffer;
 	GLuint			model_buffer;
 	GLint           mv_location;
 	GLint			view_location;
 	GLint           proj_location;
 	GLint           color_location;
+	GLint			texture_location;
 	glm::mat4		proj_matrix = glm::mat4(1.0f);
 	glm::mat4		mv_matrix = glm::mat4(1.0f);
 	glm::mat4		view_matrix = glm::mat4(1.0f);

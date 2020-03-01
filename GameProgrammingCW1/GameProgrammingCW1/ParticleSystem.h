@@ -39,6 +39,7 @@ private:
 
 	static const GLfloat quad_buffer_data[];
 
+	GLuint vao;
 	GLuint vbo_vertex;
 	GLuint vbo_position;
 	GLuint vbo_color;

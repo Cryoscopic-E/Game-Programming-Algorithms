@@ -48,6 +48,10 @@ void ParticleSystem::Init()
 	texture = glGetUniformLocation(shaderProgram, "billBoardTexture");
 
 	// GENERATE BUFFERS
+
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
 	//vertex
 	glGenBuffers(1, &vbo_vertex);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_vertex);
@@ -62,6 +66,10 @@ void ParticleSystem::Init()
 	glGenBuffers(1, &vbo_color);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_color);
 	glBufferData(GL_ARRAY_BUFFER, maxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW);
+
+	glBindVertexArray(0);
+	
+	glLinkProgram(0);
 
 }
 
@@ -78,6 +86,7 @@ void ParticleSystem::Update(float delta)
 
 void ParticleSystem::UpdateBuffers()
 {
+	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_position);
 	glBufferData(GL_ARRAY_BUFFER, maxParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW); //orphaning, allocating faster than sync
 	glBufferSubData(GL_ARRAY_BUFFER, 0, maxParticles * sizeof(GLfloat) * 4, position_data);
@@ -85,20 +94,22 @@ void ParticleSystem::UpdateBuffers()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_color);
 	glBufferData(GL_ARRAY_BUFFER, maxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, maxParticles * sizeof(GLubyte) * 4, color_data);
+
 }
 
 void ParticleSystem::Render(glm::mat4 viewMatrix, glm::mat4 projMatrix)
 {
 	glUseProgram(shaderProgram);
-
+	glBindVertexArray(vao);
 	//set uniforms
-	glUniform3f(cameraUp, viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
-	glUniform3f(cameraRight, viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
+	glUniform3f(cameraRight, viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
+	glUniform3f(cameraUp, viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
 	glm::mat4 vp = viewMatrix * projMatrix;
 	glUniformMatrix4fv(vpMatrix, 1, GL_FALSE, &vp[0][0]);
-	glUniform1i(texture, 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, particleTexture);
+	glUniform1i(texture, 0);
+	
 
 	// 1st attrib buffer vertex
 	glEnableVertexAttribArray(0);
@@ -115,18 +126,18 @@ void ParticleSystem::Render(glm::mat4 viewMatrix, glm::mat4 projMatrix)
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_color);
 	glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, (void*)0);
 
-	glVertexAttribDivisor(0, 0); 
-	glVertexAttribDivisor(1, 1); 
+	glVertexAttribDivisor(0, 0);
+	glVertexAttribDivisor(1, 1);
 	glVertexAttribDivisor(2, 1);
 
 	// draw particles
-	glDrawArraysInstanced(GL_TRIANGLE_STRIP,0,4,maxParticles);
+	glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, maxParticles);
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(2);
 
-	glUseProgram(0);
+	glBindVertexArray(0);
 }
 
 ParticleSystem::ParticleSystem(unsigned int mp, glm::vec3 start)
@@ -206,7 +217,7 @@ void ParticleSystem::loadShader()
 
 		void main()
 		{
-			color =  texture2D( billBoardTexture, uv ) * quadColor;
+			color = texture2D( billBoardTexture, uv ) *   quadColor;
 		}
 )" };
 
@@ -250,20 +261,16 @@ void ParticleSystem::generateParticles()
 		newParticle.position = startPosition;
 		srand(time(0));
 		newParticle.velocity.x = ((((float)rand()/(float)RAND_MAX) * 2.0f) -1.0f) * PARTICLE_SPEED; // between -1 and 1 float
-		srand(time(0));
+		
 		newParticle.velocity.y = ((float)rand()/(float)RAND_MAX) * PARTICLE_SPEED; // only up not through floor
-		srand(time(0));
+		
 		newParticle.velocity.z = ((((float)rand()/(float) RAND_MAX) * 2.0f) - 1.0f) * PARTICLE_SPEED;  // between -1 and 1 float
 		
-		srand(time(0));
-		newParticle.rotation = newParticle.velocity.x = (((float)rand() / (float)RAND_MAX) * 359.0f); // between 0 and 359 float
+		newParticle.scale = 100.0f; // between 1 and 1.5 float
 
-		srand(time(0));
-		newParticle.scale = 10.0f; // between 1 and 1.5 float
-
-		newParticle.color.r = 0.7f;
-		newParticle.color.g = 0.7f;
-		newParticle.color.b = 0.0f;
+		newParticle.color.r = 1.0f;
+		newParticle.color.g = 1.0f;
+		newParticle.color.b = 1.0f;
 		newParticle.color.a = 1.0f;
 
 		particles.push_back(newParticle);

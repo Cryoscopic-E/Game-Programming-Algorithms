@@ -156,11 +156,11 @@ bool CheckCollision(Body& obj1, Body& obj2);
 
 #pragma region BOIDS DEFINITIONS
 
-const int numBoids = 100;
+const int numBoids = 200;
 
 // Boid controller 
 Arrow boidsController;
-glm::vec3 boidsControllerPosition(210.0f, 0.5f, 204.0f);
+glm::vec3 boidsControllerPosition(210.0f, 1.5f, 204.0f);
 
 
 // Boids (instance rendering)
@@ -202,7 +202,28 @@ void BoidRule3();
 #pragma endregion
 
 #pragma region PARTICLES DEFINITIONS
+//ParticleSystem ps(1, glm::vec3(6.0f, 2.5f, 6.0f));
 
+struct Particle
+{
+	glm::vec3 position;
+	glm::vec3 rotation;
+	float rotation_speed;
+	glm::vec3 scale;
+	glm::vec3 velocity;
+	float life;
+};
+
+const int maxParticles = 50;
+const float lifeTime = 2.0f;
+Cube particle;
+std::vector<Particle> particles;
+glm::mat4 particleModels[maxParticles];
+
+
+void InitParticles();
+void UpdateParticles(float delta);
+void EmitParticle(glm::vec3 position);
 #pragma endregion
 
 
@@ -434,6 +455,12 @@ void startup() {
 	#pragma endregion
 
 	#pragma region PARTICLES SETUP CODE
+		//ps.Init();
+
+		InitParticles();
+
+		particle.fillColor = glm::vec4(0.1f, 0.1f, 0.1f, 0.7f);
+		particle.LoadInstanced(&particleModels[0], maxParticles);
 
 	#pragma endregion
 
@@ -643,9 +670,12 @@ void updateSceneElements() {
 			
 	#pragma endregion
 
-#pragma region PARTICLES UPDATE
-
-#pragma endregion
+	#pragma region PARTICLES UPDATE
+		//ps.Update(deltaTime);
+		UpdateParticles(deltaTime);
+		particle.view_matrix = myGraphics.viewMatrix;
+		particle.proj_matrix = myGraphics.proj_matrix;
+	#pragma endregion
 
 
 	// increment movement variable
@@ -696,7 +726,8 @@ void renderScene() {
 	#pragma endregion
 
 #pragma region PARTICLE RENDER
-
+		//ps.Render(myGraphics.viewMatrix, myGraphics.proj_matrix);
+		particle.DrawInstanced(maxParticles);
 #pragma endregion
 
 
@@ -738,6 +769,7 @@ void renderScene() {
 			if (agentTarget == glm::vec3(0)) // path not set
 			{
 				setNewAgentTarget();
+				EmitParticle(aStarPath.top());
 			}
 		}
 	}
@@ -871,6 +903,68 @@ void renderScene() {
 	}
 
 #pragma endregion
+
+#pragma region PARTICLES FUNCTIONS
+
+	void InitParticles() 
+	{
+		for (int i = 0; i < maxParticles; i++)
+		{
+			Particle p;
+			
+			float x = ((float(rand()) / float(RAND_MAX)) * 40.0f) - 20.0f;
+			
+			float y = ((float(rand()) / float(RAND_MAX)) * 20.0f);
+			
+			float z = ((float(rand()) / float(RAND_MAX)) * 40.0f) - 20.0f;
+			p.velocity = glm::vec3(x,y,z);
+
+			p.rotation = glm::vec3(
+				(rand() % 360),
+				(rand() % 360),
+				(rand() % 360)
+			);
+
+			p.rotation_speed = rand() % 3;
+
+			p.scale = glm::vec3(0.5f);
+
+			p.life = 0.0f;
+
+			particles.push_back(p);
+		}
+	}
+	void UpdateParticles(float delta)
+	{
+		
+		for (int i = 0; i < maxParticles; i++)
+		{
+			// update position
+			particles[i].position += particles[i].velocity * delta;
+			particles[i].rotation.x += particles[i].rotation_speed;
+			particles[i].rotation.y += particles[i].rotation_speed;
+			particles[i].rotation.z += particles[i].rotation_speed;
+			
+			// update models
+			particleModels[i] = glm::translate(particles[i].position) *
+				glm::rotate(particles[i].rotation.x, glm::vec3(1.0f, 0.0f, 0.0f)) *
+				glm::rotate(particles[i].rotation.x, glm::vec3(1.0f, 0.0f, 0.0f)) *
+				glm::rotate(particles[i].rotation.x, glm::vec3(1.0f, 0.0f, 0.0f)) *
+				glm::scale(particles[i].scale) *
+				glm::mat4(1.0f);
+		}
+		particle.UpdateModelBuffer(&particleModels[0], maxParticles);
+	}
+	void EmitParticle(glm::vec3 position)
+	{
+		for (int i = 0; i < maxParticles; i++)
+		{
+			particles[i].life = 0.0f;
+			particles[i].position = position;
+		}
+	}
+#pragma endregion
+
 
 #pragma region INPUT FUNCTIONS
 
