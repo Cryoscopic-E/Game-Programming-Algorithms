@@ -4,17 +4,15 @@
 #include "Shapes.h" 
 
 enum class Direction { Left, Right, Up, Down, Idle };
-class Body : public Cube
+class Body
 {
 public:
-	Body();
+	Body(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
 	~Body();
 
 
 	void Update(float time);
-	void CalculatePhysics(float deltatime);
-	void CalculateDirection();
-	void CalculateSides();
+	
 
 	//Transform
 	glm::vec3				position;
@@ -35,12 +33,17 @@ public:
 	float					topSpeed = 5.0f;
 	float					debugSpeed = 1;
 	bool					isColliding = false;
+	bool					onGround = false;
 
-	//Boids
-	bool					isBoid;
+	bool					isBoid = false;
 	glm::vec3				boidVelocity;
-private:
 
+	bool					isStatic = false;
+
+private:
+	void CalculatePhysics(float deltatime);
+	void CalculateDirection();
+	void CalculateSides();
 };
 
 

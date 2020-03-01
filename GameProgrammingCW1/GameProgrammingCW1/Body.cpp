@@ -1,7 +1,11 @@
 #include "Body.h"
 
-Body::Body()
+Body::Body(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale)
 {
+	this->position = position;
+	this->rotation = rotation;
+	this->scale = scale;
+	CalculateSides();
 }
 
 Body::~Body()
@@ -10,9 +14,12 @@ Body::~Body()
 
 void Body::Update(float time)
 {
-	CalculateSides();
-	CalculatePhysics(time);
-	CalculateDirection();
+	if (!isStatic)
+	{
+		CalculateSides();
+		CalculatePhysics(time);
+		CalculateDirection();
+	}
 }
 
 void Body::CalculatePhysics(float deltatime)
@@ -47,7 +54,7 @@ void Body::CalculateDirection()
 {
 	if (isColliding)
 		return;
-
+	
 	addedForce = glm::vec3(0, 0, 0);
 	if (velocity.x > 0) {
 		direction = Direction::Left;
@@ -60,7 +67,7 @@ void Body::CalculateDirection()
 
 	}
 	else if (velocity.z > 0) {
-		if (!isBoid)direction = Direction::Up;
+		if (!isBoid)direction =Direction::Up;
 		if (!isBoid)printf(" UP \n");
 
 	}

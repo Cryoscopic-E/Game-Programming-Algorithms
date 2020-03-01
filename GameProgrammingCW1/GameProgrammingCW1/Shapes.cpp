@@ -212,7 +212,7 @@ void Shapes::LoadInstanced(glm::mat4* models, const int num)
 
 	glGenBuffers(1, &model_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, model_buffer);
-	glBufferData(GL_ARRAY_BUFFER, num * sizeof(glm::mat4), &models[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, num * sizeof(glm::mat4), &models[0], GL_STREAM_DRAW);
 
 	// set attribute pointers for matrix (4 times vec4)
 	glEnableVertexAttribArray(1);
