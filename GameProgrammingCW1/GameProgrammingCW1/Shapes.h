@@ -18,6 +18,7 @@ public:
 	void LoadInstanced(glm::mat4* models, const int num);
 	void Draw();
 	void DrawInstanced(const int numInstances);
+	void UpdateModelBuffer(glm::mat4* models, const int num);
 	void  checkErrorShader(GLuint shader);
 
 	vector<GLfloat> vertexPositions;

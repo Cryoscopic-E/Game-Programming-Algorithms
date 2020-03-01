@@ -638,9 +638,8 @@ void updateSceneElements() {
 					boidsModels[i] = glm::translate(boidsBodies[i].position) *
 						glm::mat4(1.0f);
 				}
-				glBindBuffer(GL_ARRAY_BUFFER, boids.model_buffer);
-				glBufferData(GL_ARRAY_BUFFER, numBoids * sizeof(glm::mat4), &boidsModels[0], GL_STREAM_DRAW);
-
+				
+				boids.UpdateModelBuffer(&boidsModels[0], numBoids);
 			
 	#pragma endregion
 

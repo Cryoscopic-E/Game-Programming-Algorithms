@@ -294,6 +294,12 @@ void Shapes::DrawInstanced(const int numInstances)
 
 }
 
+void Shapes::UpdateModelBuffer(glm::mat4* models, const int num)
+{
+	glBindBuffer(GL_ARRAY_BUFFER, model_buffer);
+	glBufferData(GL_ARRAY_BUFFER, num * sizeof(glm::mat4), &models[0], GL_STREAM_DRAW);
+}
+
 
 void Shapes::checkErrorShader(GLuint shader) {
 	// Get log length
