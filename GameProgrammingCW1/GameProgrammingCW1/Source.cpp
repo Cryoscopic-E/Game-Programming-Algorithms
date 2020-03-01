@@ -68,7 +68,7 @@ int currentScene = 0;
 CamTransform scenes[] = {
 	CamTransform(glm::vec3(12.7f, 11.0f, 12.0f),-138.0f,-53.0f),
 	CamTransform(glm::vec3(105.7f, 14.0f, 95.0f),-270.0f,-51.0f),
-	CamTransform(glm::vec3(200.7f, 13.0f, 200.0f),-270.0f,-61.0f)
+	CamTransform(glm::vec3(206.0f, 10.5f, 198.0f),-270.0f,-55.0f)
 };
 #pragma endregion
 
@@ -488,6 +488,8 @@ void updateCamera() {
 		front.x = cos(glm::radians(myGraphics.cameraYaw)) * cos(glm::radians(myGraphics.cameraPitch));
 		front.y = sin(glm::radians(myGraphics.cameraPitch));
 		front.z = sin(glm::radians(myGraphics.cameraYaw)) * cos(glm::radians(myGraphics.cameraPitch));
+
+		myGraphics.cameraFront = glm::normalize(front);
 
 		myGraphics.viewMatrix = glm::lookAt(myGraphics.cameraPosition,			// eye
 			myGraphics.cameraPosition + myGraphics.cameraFront,					// centre
